@@ -10,7 +10,7 @@
 #define RAD_SCALE_MAX 2.443460953	// 140 degrees
 #define RAD_SCALE_RANGE (RAD_SCALE_MAX - RAD_SCALE_MIN)
 
-#define INT_RAD_SCALE_RANGE 4294967295	// 32-bit encoding
+#define INT_RAD_SCALE_RANGE 4294967295.0	// 32-bit encoding
 
 #define NUMBER_OF_ELEMS 6
 
@@ -112,6 +112,7 @@ double randAngleRads(double lower, double upper) {
 uint convertRadsToInt(double radians) {
 	printf("Radians: %lf\n", radians);
 	double encoding = (radians - RAD_SCALE_MIN) / RAD_SCALE_RANGE * INT_RAD_SCALE_RANGE;
+	printf("(radians - RAD_SCALE_MIN) / RAD_SCALE_RANGE = %lf\n", (radians - RAD_SCALE_MIN) / RAD_SCALE_RANGE);
 	printf("Encoding: %lf\n", encoding);
 	// return (uint) round(encoding);
 	return (uint) ((radians - RAD_SCALE_MIN) / RAD_SCALE_RANGE * INT_RAD_SCALE_RANGE);
