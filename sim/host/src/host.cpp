@@ -109,10 +109,10 @@ double randAngleRads(double lower, double upper) {
 }
 
 
-uint convertRadsToInt(double radians) {
+uint32_t convertRadsToInt(double radians) {
 	// double encoding = (radians - RAD_SCALE_MIN) / RAD_SCALE_RANGE * INT_RAD_SCALE_RANGE;
 	// return (uint) round(encoding);
-	return (uint) ((radians - RAD_SCALE_MIN) / RAD_SCALE_RANGE * INT_RAD_SCALE_RANGE);
+	return (uint32_t) ((radians - RAD_SCALE_MIN) / RAD_SCALE_RANGE * INT_RAD_SCALE_RANGE);
 }
 
 
