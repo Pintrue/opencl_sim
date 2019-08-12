@@ -48,8 +48,8 @@ long* output_trig_vals;
 
 // Function prototypes
 void checkStatus(cl_int status, const char* file, int line, const char* msg);
-float randAngleRads(float lower, float upper);
-uint convertRadsToInt(float radians);
+double randAngleRads(double lower, double upper);
+uint convertRadsToInt(double radians);
 bool initOpencl();
 void initInput();
 void run();
