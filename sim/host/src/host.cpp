@@ -114,8 +114,8 @@ uint convertRadsToInt(double radians) {
 	double encoding = (radians - RAD_SCALE_MIN) / RAD_SCALE_RANGE * INT_RAD_SCALE_RANGE;
 	printf("(radians - RAD_SCALE_MIN) / RAD_SCALE_RANGE = %lf\n", (radians - RAD_SCALE_MIN) / RAD_SCALE_RANGE);
 	printf("Encoding: %lf\n", encoding);
-	// return (uint) round(encoding);
-	return (uint) encoding;
+	return (uint) round(encoding);
+	// return (uint) ((radians - RAD_SCALE_MIN) / RAD_SCALE_RANGE * INT_RAD_SCALE_RANGE);
 }
 
 
@@ -209,9 +209,15 @@ void initInput() {
 	double ja_0, ja_1, ja_2;		// cosine angle radians
 	double _ja_0, _ja_1, _ja_2;	// sine angle radians (offset -pi/2, expressed by cosine)
 
-	ja_0 = randAngleRads(JNT0_L, JNT0_U); _ja_0 = ja_0 - (M_PI / 2);
-	ja_1 = randAngleRads(JNT1_L, JNT1_U); _ja_1 = ja_1 - (M_PI / 2);
-	ja_2 = randAngleRads(JNT2_L, JNT2_U); _ja_2 = ja_2 - (M_PI / 2);
+	// ja_0 = randAngleRads(JNT0_L, JNT0_U); _ja_0 = ja_0 - (M_PI / 2);
+	// ja_1 = randAngleRads(JNT1_L, JNT1_U); _ja_1 = ja_1 - (M_PI / 2);
+	// ja_2 = randAngleRads(JNT2_L, JNT2_U); _ja_2 = ja_2 - (M_PI / 2);
+	ja_0 = 1.068731;
+	ja_1 = 0.894826;
+	ja_2 = -0.340707;
+	_ja_0 = -0.502065;
+	_ja_1 = -0.675970;
+	_ja_2 = -1.911503;
 	
 	printf("Before conversion:\n");
 	printf("ja[0] = %lf\n", ja_0);
