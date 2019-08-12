@@ -209,6 +209,14 @@ void initInput() {
 	ja_1 = randAngleRads(JNT1_L, JNT1_U); _ja_1 = ja_1 - (M_PI / 2);
 	ja_2 = randAngleRads(JNT2_L, JNT2_U); _ja_2 = ja_2 - (M_PI / 2);
 	
+	printf("Before conversion:\n");
+	printf("ja[0] = %f\n", ja_0);
+	printf("ja[1] = %f\n", ja_1);
+	printf("ja[2] = %f\n", ja_2);
+	printf("ja[3] = %f\n", _ja_0);
+	printf("ja[4] = %f\n", _ja_1);
+	printf("ja[5] = %f\n", _ja_2);
+
 	// Convert radians to corresponding integer encoding
 	input_jnt_angles[0] = convertRadsToInt(ja_0);
 	input_jnt_angles[1] = convertRadsToInt(ja_1);
