@@ -12,6 +12,19 @@
 
 #define INT_RAD_SCALE_RANGE 4294967295	// 32-bit encoding
 
+#define NUMBER_OF_ELEMS 6
+
+#ifndef M_PI
+	#define M_PI 3.14159265359
+#endif
+
+#define JNT0_L -M_PI/2
+#define JNT0_U M_PI/2
+#define JNT1_L 0.0
+#define JNT1_U 130.0/180.0*M_PI
+#define JNT2_L -M_PI/2
+#define JNT2_U 0.0
+
 
 using namespace std;
 
@@ -25,12 +38,12 @@ cl_command_queue command_queue;
 cl_program program = NULL;
 cl_kernel kernel;
 
-// cl_mem input_jnt_angles_buf;
-
+cl_mem input_jnt_angles_buf;
+cl_mem output_trig_vals_buf;
 
 // Input data
 uint* input_jnt_angles;
-long* output;
+long* output_trig_vals;
 
 
 // Function prototypes
@@ -38,8 +51,8 @@ void checkStatus(cl_int status, const char* file, int line, const char* msg);
 float randAngleRads(float lower, float upper);
 uint convertRadsToInt(float radians);
 bool initOpencl();
-// void initInput();
-// void run();
+void initInput();
+void run();
 void cleanup();
 
 
@@ -51,6 +64,8 @@ int main(int argc, char** argv) {
 		printf("ERROR: Unable to initialize OpenCL at %s: line %d.\n", __FILE__, __LINE__);
 		return -1;
 	}
+
+	initInput();
 
 	err = clSetKernelArg(kernel, 0, sizeof(cl_int), (void*) &thread_id_to_output);
 	checkStatus(err, __FILE__, __LINE__, "Failed to set kernel arg 0");
@@ -93,20 +108,17 @@ float randAngleRads(float lower, float upper) {
 	return lower + (rand() / (float(RAND_MAX) / (upper - lower)));
 }
 
+
 uint convertRadsToInt(float radians) {
 	float encoding = (radians - RAD_SCALE_MIN) / RAD_SCALE_RANGE * INT_RAD_SCALE_RANGE;
+	return (uint) round(encoding);
 }
+
 
 bool initOpencl() {
 	cl_int err;
 
 	printf("Initializing OpenCL\n");
-
-	// if (!setCwdToExeDir()) {
-	// 	printf("ERROR: at %s: line %d\n", __FILE__, __LINE__);
-	// 	printf("'setCwdToExeDir()' failed.");
-	// 	return false;
-	// }
 
 	// obtain OpenCL platform
 	err = clGetPlatformIDs(1, &platform, NULL);
@@ -171,8 +183,50 @@ bool initOpencl() {
 	kernel = clCreateKernel(program, kernel_name, &err);
 	checkStatus(err, __FILE__, __LINE__, "'clCreateKernel()' failed");
 
-	printf("FINISH INIT\n");
+	// Create the input buffer
+	input_jnt_angles_buf = clCreateBuffer(context, CL_MEM_READ_ONLY, NUMBER_OF_ELEMS * sizeof(uint), NULL, &err);
+	checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'input_jnt_angles_buf' failed");
+
+	// Create the output buffer
+	output_trig_vals_buf = clCreateBuffer(context, CL_MEM_WRITE_ONLY, NUMBER_OF_ELEMS * sizeof(long), NULL, &err);
+	checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'output_trig_vals_buf' failed");
+
+
+	printf("FINISH INIT.\n");
 	return true;
+}
+
+
+void initInput() {
+	input_jnt_angles = new uint[NUMBER_OF_ELEMS];
+	output_trig_vals = new long[NUMBER_OF_ELEMS];
+
+	// Randomize the input elements
+	float ja_0, ja_1, ja_2;		// cosine angle radians
+	float _ja_0, _ja_1, _ja_2;	// sine angle radians (offset -pi/2, expressed by cosine)
+
+	ja_0 = randAngleRads(JNT0_L, JNT0_U); _ja_0 = ja_0 - (M_PI / 2);
+	ja_1 = randAngleRads(JNT1_L, JNT1_U); _ja_1 = ja_1 - (M_PI / 2);
+	ja_2 = randAngleRads(JNT2_L, JNT2_U); _ja_2 = ja_2 - (M_PI / 2);
+	
+	// Convert radians to corresponding integer encoding
+	input_jnt_angles[0] = convertRadsToInt(ja_0);
+	input_jnt_angles[1] = convertRadsToInt(ja_1);
+	input_jnt_angles[2] = convertRadsToInt(ja_2);
+	input_jnt_angles[3] = convertRadsToInt(_ja_0);
+	input_jnt_angles[4] = convertRadsToInt(_ja_1);
+	input_jnt_angles[5] = convertRadsToInt(_ja_2);
+	
+	printf("After conversion:\n");
+	for (int i = 0; i < NUMBER_OF_ELEMS; ++i) {
+		printf("ja[%d] = %u\n", i, input_jnt_angles[i]);
+	}
+	// TODO: verification output
+}
+
+
+void run() {
+
 }
 
 
@@ -180,13 +234,35 @@ void cleanup() {
 	if (kernel) {
 		clReleaseKernel(kernel);
 	}
+
 	if (program) {
 		clReleaseProgram(program);
 	}
+
 	if (command_queue) {
 		clReleaseCommandQueue(command_queue);
 	}
+
 	if (context) {
 		clReleaseContext(context);
 	}
+
+	if (input_jnt_angles_buf) {
+		clReleaseMemObject(input_jnt_angles_buf);
+	}
+
+	if (output_trig_vals_buf) {
+		clReleaseMemObject(output_trig_vals_buf);
+	}
+
+	if (input_jnt_angles) {
+		delete[] input_jnt_angles;
+	}
+
+	if (output_trig_vals) {
+		delete[] output_trig_vals;
+	}
+
+
+	printf("FINISH CLEANUP.\n");
 }
