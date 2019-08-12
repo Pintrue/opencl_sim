@@ -104,13 +104,13 @@ void checkStatus(cl_int status,
 }
 
 
-float randAngleRads(float lower, float upper) {
-	return lower + (rand() / (float(RAND_MAX) / (upper - lower)));
+double randAngleRads(double lower, double upper) {
+	return lower + (rand() / (double(RAND_MAX) / (upper - lower)));
 }
 
 
-uint convertRadsToInt(float radians) {
-	float encoding = (radians - RAD_SCALE_MIN) / RAD_SCALE_RANGE * INT_RAD_SCALE_RANGE;
+uint convertRadsToInt(double radians) {
+	double encoding = (radians - RAD_SCALE_MIN) / RAD_SCALE_RANGE * INT_RAD_SCALE_RANGE;
 	return (uint) round(encoding);
 }
 
@@ -202,20 +202,20 @@ void initInput() {
 	output_trig_vals = new long[NUMBER_OF_ELEMS];
 
 	// Randomize the input elements
-	float ja_0, ja_1, ja_2;		// cosine angle radians
-	float _ja_0, _ja_1, _ja_2;	// sine angle radians (offset -pi/2, expressed by cosine)
+	double ja_0, ja_1, ja_2;		// cosine angle radians
+	double _ja_0, _ja_1, _ja_2;	// sine angle radians (offset -pi/2, expressed by cosine)
 
 	ja_0 = randAngleRads(JNT0_L, JNT0_U); _ja_0 = ja_0 - (M_PI / 2);
 	ja_1 = randAngleRads(JNT1_L, JNT1_U); _ja_1 = ja_1 - (M_PI / 2);
 	ja_2 = randAngleRads(JNT2_L, JNT2_U); _ja_2 = ja_2 - (M_PI / 2);
 	
 	printf("Before conversion:\n");
-	printf("ja[0] = %f\n", ja_0);
-	printf("ja[1] = %f\n", ja_1);
-	printf("ja[2] = %f\n", ja_2);
-	printf("ja[3] = %f\n", _ja_0);
-	printf("ja[4] = %f\n", _ja_1);
-	printf("ja[5] = %f\n", _ja_2);
+	printf("ja[0] = %lf\n", ja_0);
+	printf("ja[1] = %lf\n", ja_1);
+	printf("ja[2] = %lf\n", ja_2);
+	printf("ja[3] = %lf\n", _ja_0);
+	printf("ja[4] = %lf\n", _ja_1);
+	printf("ja[5] = %lf\n", _ja_2);
 
 	// Convert radians to corresponding integer encoding
 	input_jnt_angles[0] = convertRadsToInt(ja_0);
