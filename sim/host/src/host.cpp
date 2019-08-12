@@ -109,10 +109,11 @@ double randAngleRads(double lower, double upper) {
 }
 
 
-uint32_t convertRadsToInt(double radians) {
+uint convertRadsToInt(double radians) {
+	printf("Radians: %lf\n", radians);
 	// double encoding = (radians - RAD_SCALE_MIN) / RAD_SCALE_RANGE * INT_RAD_SCALE_RANGE;
 	// return (uint) round(encoding);
-	return (uint32_t) ((radians - RAD_SCALE_MIN) / RAD_SCALE_RANGE * INT_RAD_SCALE_RANGE);
+	return (uint) ((radians - RAD_SCALE_MIN) / RAD_SCALE_RANGE * INT_RAD_SCALE_RANGE);
 }
 
 
