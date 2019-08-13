@@ -297,7 +297,7 @@ void run() {
 	clReleaseEvent(finish_event);
 
 	for (int i = 0; i < NUMBER_OF_ELEMS; ++i) {
-		printf("%d: %ld\n", i, output_trig_vals[i]);
+		printf("%d: %lld\n", i, output_trig_vals[i]);
 	}
 	// TODO: Verify results
 }
