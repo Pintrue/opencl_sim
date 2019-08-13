@@ -3,6 +3,7 @@
 #include <math.h>
 #include <assert.h>
 #include <ctime>
+#include <time.h>
 #include "CL/opencl.h"
 // #include "AOCLUtils/aocl_utils.h"
 
@@ -246,7 +247,9 @@ void initInput() {
 void run() {
 	cl_int err;
 
-	clock_t begin = clock();
+	// clock_t begin = clock();
+	struct timespec begin, end;
+	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &begin);
 
 	cl_event kernel_event;
 	cl_event finish_event;
@@ -287,9 +290,11 @@ void run() {
 	clWaitForEvents(1, &finish_event);
 
 
-	clock_t end = clock();
+	// clock_t end = clock();
+	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+	double elapsed_time = (end.tv_sec - begin.tv_sec) * 1e6 + (end.tv_nsec - begin.tv_nsec) / 1e3;
 
-	double elapsed_time = double(end - begin) / CLOCKS_PER_SEC;
+	// double elapsed_time = double(end - begin) / CLOCKS_PER_SEC;
 	printf("Kernel time: %0.3lf ms.\n", elapsed_time);
 
 	// Release all events
