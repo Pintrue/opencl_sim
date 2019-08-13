@@ -68,22 +68,23 @@ int main(int argc, char** argv) {
 
 	initInput();
 
-	err = clSetKernelArg(kernel, 0, sizeof(cl_int), (void*) &thread_id_to_output);
-	checkStatus(err, __FILE__, __LINE__, "Failed to set kernel arg 0");
+	// err = clSetKernelArg(kernel, 0, sizeof(cl_int), (void*) &thread_id_to_output);
+	// checkStatus(err, __FILE__, __LINE__, "Failed to set kernel arg 0");
 
 	printf("\nKernel initialization is complete.\n");
 	printf("Launching the kernel...\n\n");
 
-	// Create work-item set
-	size_t local_size[3] = {8, 1, 1};
-	size_t global_size[3] = {8, 1, 1};
+	run();
+	// // Create work-item set
+	// size_t local_size[3] = {8, 1, 1};
+	// size_t global_size[3] = {8, 1, 1};
 
-	// launch the kernel
-	err = clEnqueueNDRangeKernel(command_queue, kernel, 1, NULL, global_size, local_size, 0, NULL, NULL);
-	checkStatus(err, __FILE__, __LINE__, "Launching NDKernel failed");
+	// // launch the kernel
+	// err = clEnqueueNDRangeKernel(command_queue, kernel, 1, NULL, global_size, local_size, 0, NULL, NULL);
+	// checkStatus(err, __FILE__, __LINE__, "Launching NDKernel failed");
 
-	err = clFinish(command_queue);
-	checkStatus(err, __FILE__, __LINE__, "Does not finish smoothly");
+	// err = clFinish(command_queue);
+	// checkStatus(err, __FILE__, __LINE__, "Does not finish smoothly");
 
 	printf("Kernel execution complete.\n");
 
@@ -143,7 +144,8 @@ bool initOpencl() {
 	/* Create the program with binary file */
 
 	// - 1. Load the binary file
-	const char* file_name = "bin/hello_world.aocx";
+	// const char* file_name = "bin/hello_world.aocx";
+	const char* file_name = "bin/km.aocx";
 	FILE* file_ptr;
 	file_ptr = fopen(file_name, "rb");
 	if (file_ptr == NULL) {
@@ -181,7 +183,7 @@ bool initOpencl() {
 	checkStatus(err, __FILE__, __LINE__, "clCreateCommandQueue()' failed");
 
 	// Create the kernel
-	const char* kernel_name = "hello_world";
+	const char* kernel_name = "cosine_int_32";
 	kernel = clCreateKernel(program, kernel_name, &err);
 	checkStatus(err, __FILE__, __LINE__, "'clCreateKernel()' failed");
 
