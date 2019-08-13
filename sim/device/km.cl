@@ -43,10 +43,10 @@ __kernel void cosine_int_32(__global const uint* restrict jnt_angles,
 	// mask and shift to obtain LUT index
 	uint angle_idx = (angle_input & 0xFFF00000) >> 20;
 
-	printf("Global id: %d\n", idx);
-	printf("Angle is %u\n", angle_input);
-	printf("m = %c and b = %lld\n", grad_table_32[angle_idx], intercept_table_32[angle_idx]);
+	// printf("Global id: %d\n", idx);
+	// printf("Angle is %u\n", angle_input);
+	// printf("m = %d and b = %ld\n", grad_table_32[angle_idx], intercept_table_32[angle_idx]);
 
 	// obtain trigonometry encoding value at that LUT index
-	output[idx] = grad_table_32[angle_idx] * angle_input + intercept_table_32[angle_idx];
+	output[idx] = (long) grad_table_32[angle_idx] * angle_input + intercept_table_32[angle_idx];
 }
