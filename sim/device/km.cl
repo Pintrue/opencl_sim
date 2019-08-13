@@ -2,7 +2,7 @@ __kernel void cosine_int_32(__global const uint* restrict jnt_angles,
 							__global long* restrict output) {
 
 	local char grad_table_32[4095];
-	local int intercept_table_32[4095];
+	local long intercept_table_32[4095];
 
 	// init the LUT of integer-encoded cosine function
 	for (unsigned i = 0; i < 351; ++i) {
@@ -41,7 +41,7 @@ __kernel void cosine_int_32(__global const uint* restrict jnt_angles,
 	uint angle_input = jnt_angles[idx];
 	
 	// mask and shift to obtain LUT index
-	uint angle_idx = (angle_input & 0xFFF0_0000) >> 20;
+	uint angle_idx = (angle_input & 0xFFF00000) >> 20;
 
 	// obtain trigonometry encoding value at that LUT index
 	output[idx] = grad_table_32[angle_idx] * angle_input + intercept_table_32[angle_idx];
