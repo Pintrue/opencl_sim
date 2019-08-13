@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <assert.h>
+#include <ctime>
 #include "CL/opencl.h"
 // #include "AOCLUtils/aocl_utils.h"
 
@@ -216,13 +217,13 @@ void initInput() {
 	// _ja_1 = -0.675970;
 	// _ja_2 = -1.911503;
 	
-	printf("Before conversion:\n");
-	printf("ja[0] = %lf\n", ja_0);
-	printf("ja[1] = %lf\n", ja_1);
-	printf("ja[2] = %lf\n", ja_2);
-	printf("ja[3] = %lf\n", _ja_0);
-	printf("ja[4] = %lf\n", _ja_1);
-	printf("ja[5] = %lf\n", _ja_2);
+	// printf("Before conversion:\n");
+	// printf("ja[0] = %lf\n", ja_0);
+	// printf("ja[1] = %lf\n", ja_1);
+	// printf("ja[2] = %lf\n", ja_2);
+	// printf("ja[3] = %lf\n", _ja_0);
+	// printf("ja[4] = %lf\n", _ja_1);
+	// printf("ja[5] = %lf\n", _ja_2);
 
 	// Convert radians to corresponding integer encoding
 	input_jnt_angles[0] = convertRadsToInt(ja_0);
@@ -232,16 +233,71 @@ void initInput() {
 	input_jnt_angles[4] = convertRadsToInt(_ja_1);
 	input_jnt_angles[5] = convertRadsToInt(_ja_2);
 	
-	printf("After conversion:\n");
-	for (int i = 0; i < NUMBER_OF_ELEMS; ++i) {
-		printf("ja[%d] = %u\n", i, input_jnt_angles[i]);
-	}
+	// printf("After conversion:\n");
+	// for (int i = 0; i < NUMBER_OF_ELEMS; ++i) {
+	// 	printf("ja[%d] = %u\n", i, input_jnt_angles[i]);
+	// }
 	// TODO: verification output
 }
 
 
 void run() {
+	cl_int err;
 
+	clock_t begin = clock();
+
+	cl_event kernel_event;
+	cl_event finish_event;
+
+	// Enqueue write commands to the input buffer
+	cl_event write_events[1];
+	err = clEnqueueWriteBuffer(command_queue, input_jnt_angles_buf, CL_FALSE,
+			0, NUMBER_OF_ELEMS * sizeof(uint), input_jnt_angles, 0, NULL, &write_events[0]);
+	checkStatus(err, __FILE__, __LINE__, "'clEnqueueWriteBuffer()' for 'input_jnt_angles_buf' failed");
+
+	// Set kernel argument
+	unsigned argi = 0;
+
+	err = clSetKernelArg(kernel, argi++, sizeof(cl_mem),
+			&input_jnt_angles_buf);
+	checkStatus(err, __FILE__, __LINE__, "'clSetKernelArg()' failed");
+
+	err = clSetKernelArg(kernel, argi++, sizeof(cl_mem),
+			&output_trig_vals_buf);
+	checkStatus(err, __FILE__, __LINE__, "'clSetKernelArg()' failed");
+
+	// Launch the kernel
+	const size_t global_work_size = NUMBER_OF_ELEMS;
+	err = clEnqueueNDRangeKernel(command_queue, kernel, 1, NULL,
+			&global_work_size, NULL, 1, write_events, &kernel_event);
+	checkStatus(err, __FILE__, __LINE__, "'clEnqueueNDRangeKernel()' failed");
+
+	// Enqueue read commands on the output buffer
+	err = clEnqueueReadBuffer(command_queue, output_trig_vals_buf, CL_FALSE, 0,
+			NUMBER_OF_ELEMS * sizeof(long), output_trig_vals, 1, &kernel_event,
+			&finish_event);
+	checkStatus(err, __FILE__, __LINE__, "'clEnqueueReadBuffer()' failed");
+
+	// Release local event
+	clReleaseEvent(write_events[0]);
+
+	// Wait for the output write to finish
+	clWaitForEvents(1, &finish_event);
+
+
+	clock_t end = clock();
+
+	double elapsed_time = double(end - begin) / CLOCKS_PER_SEC;
+	printf("Kernel time: %0.3lf ms.\n", elapsed_time);
+
+	// Release all events
+	clReleaseEvent(kernel_event);
+	clReleaseEvent(finish_event);
+
+	for (int i = 0; i < NUMBER_OF_ELEMS; ++i) {
+		printf("%d: %ld\n");
+	}
+	// TODO: Verify results
 }
 
 
