@@ -5,14 +5,20 @@
 #include <ctime>
 #include <time.h>
 #include "CL/opencl.h"
-// #include "AOCLUtils/aocl_utils.h"
 
+
+#define MAX_32_BITS 4294967295
 
 #define RAD_SCALE_MIN -3.665191429	// -210 degrees
 #define RAD_SCALE_MAX 2.443460953	// 140 degrees
 #define RAD_SCALE_RANGE (RAD_SCALE_MAX - RAD_SCALE_MIN)
 
-#define INT_RAD_SCALE_RANGE 4294967295.0	// 32-bit encoding
+#define INT_RAD_SCALE_MIN 0
+#define INT_RAD_SCALE_MAX MAX_32_BITS
+#define INT_RAD_SCALE_RANGE (INT_RAD_SCALE_MAX - INT_RAD_SCALE_MIN)
+#define INT_TRIG_SCALE_MIN 0
+#define INT_TRIG_SCALE_MAX MAX_32_BITS
+#define INT_TRIG_SCALE_RANGE (INT_TRIG_SCALE_MAX - INT_TRIG_SCALE_MIN)
 
 #define NUMBER_OF_ELEMS 6
 
@@ -30,7 +36,6 @@
 
 using namespace std;
 
-static const int thread_id_to_output = 2;
 
 // Runtime config
 cl_platform_id platform = NULL;
@@ -52,6 +57,7 @@ long* output_trig_vals;
 void checkStatus(cl_int status, const char* file, int line, const char* msg);
 double randAngleRads(double lower, double upper);
 uint convertRadsToInt(double radians);
+double convertTrigEncToVal(long enc);
 bool initOpencl();
 void initInput();
 void run();
@@ -67,25 +73,26 @@ int main(int argc, char** argv) {
 		return -1;
 	}
 
-	initInput();
+	while (1) {
+		initInput();
 
-	// err = clSetKernelArg(kernel, 0, sizeof(cl_int), (void*) &thread_id_to_output);
-	// checkStatus(err, __FILE__, __LINE__, "Failed to set kernel arg 0");
+		printf("\nKernel initialization is complete.\n");
+		printf("Launching the kernel...\n\n");
 
-	printf("\nKernel initialization is complete.\n");
-	printf("Launching the kernel...\n\n");
+		run();
 
-	run();
-	// // Create work-item set
-	// size_t local_size[3] = {8, 1, 1};
-	// size_t global_size[3] = {8, 1, 1};
+		for (int i = 0; i < NUMBER_OF_ELEMS; ++i) {
+			// printf("In radians: %u\n", input_jnt_angles[i]);
+			printf("In encoding: %d: %ld\n", i, output_trig_vals[i]);
+			// printf("Converted back: %lf\n", convertTrigEncToVal(output_trig_vals[i]));
+			printf("-----------------------------\n");
+		}
 
-	// // launch the kernel
-	// err = clEnqueueNDRangeKernel(command_queue, kernel, 1, NULL, global_size, local_size, 0, NULL, NULL);
-	// checkStatus(err, __FILE__, __LINE__, "Launching NDKernel failed");
-
-	// err = clFinish(command_queue);
-	// checkStatus(err, __FILE__, __LINE__, "Does not finish smoothly");
+		printf("\nTo continue, please enter any key.\n");
+		char c;
+		scanf("%c", &c);
+		printf("\n");
+	}
 
 	printf("Kernel execution complete.\n");
 
@@ -116,6 +123,17 @@ uint convertRadsToInt(double radians) {
 	double encoding = (radians - RAD_SCALE_MIN) / RAD_SCALE_RANGE * INT_RAD_SCALE_RANGE;
 
 	return (uint) round(encoding);
+}
+
+
+double convertTrigEncToVal(long enc) {
+	if (enc < INT_TRIG_SCALE_MIN || enc > INT_TRIG_SCALE_MAX) {
+		enc = ((enc < INT_TRIG_SCALE_MIN) ? INT_TRIG_SCALE_MIN : enc > INT_TRIG_SCALE_MAX) ? INT_TRIG_SCALE_MAX : enc;
+	}
+
+	double val = ((double) enc - INT_TRIG_SCALE_MIN) / INT_TRIG_SCALE_RANGE * 2.0 - 1.0;
+	// printf("From encoding %lu to value %lf\n", enc, val);
+	return val;
 }
 
 
@@ -210,15 +228,16 @@ void initInput() {
 	double ja_0, ja_1, ja_2;		// cosine angle radians
 	double _ja_0, _ja_1, _ja_2;	// sine angle radians (offset -pi/2, expressed by cosine)
 
-	// ja_0 = randAngleRads(JNT0_L, JNT0_U); _ja_0 = ja_0 - (M_PI / 2);
-	// ja_1 = randAngleRads(JNT1_L, JNT1_U); _ja_1 = ja_1 - (M_PI / 2);
-	// ja_2 = randAngleRads(JNT2_L, JNT2_U); _ja_2 = ja_2 - (M_PI / 2);
-	ja_0 = 1.068731;
-	ja_1 = 0.894826;
-	ja_2 = -0.340707;
-	_ja_0 = -0.502065;
-	_ja_1 = -0.675970;
-	_ja_2 = -1.911503;
+	ja_0 = randAngleRads(JNT0_L, JNT0_U); _ja_0 = ja_0 - (M_PI / 2);
+	ja_1 = randAngleRads(JNT1_L, JNT1_U); _ja_1 = ja_1 - (M_PI / 2);
+	ja_2 = randAngleRads(JNT2_L, JNT2_U); _ja_2 = ja_2 - (M_PI / 2);
+
+	// ja_0 = 1.068731;
+	// ja_1 = 0.894826;
+	// ja_2 = -0.340707;
+	// _ja_0 = -0.502065;
+	// _ja_1 = -0.675970;
+	// _ja_2 = -1.911503;
 	
 	// printf("Before conversion:\n");
 	// printf("ja[0] = %lf\n", ja_0);
@@ -295,16 +314,11 @@ void run() {
 	double elapsed_time = (end.tv_sec - begin.tv_sec) * 1e6 + (end.tv_nsec - begin.tv_nsec) / 1e3;
 
 	// double elapsed_time = double(end - begin) / CLOCKS_PER_SEC;
-	printf("Kernel time: %0.3lf ms.\n", elapsed_time);
+	printf("Kernel time: %0.3lf microseconds.\n", elapsed_time);
 
 	// Release all events
 	clReleaseEvent(kernel_event);
 	clReleaseEvent(finish_event);
-
-	for (int i = 0; i < NUMBER_OF_ELEMS; ++i) {
-		printf("%d: %lld\n", i, output_trig_vals[i]);
-	}
-	// TODO: Verify results
 }
 
 
