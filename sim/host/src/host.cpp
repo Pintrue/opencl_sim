@@ -44,13 +44,16 @@ cl_context context = NULL;
 cl_command_queue command_queue;
 cl_program program = NULL;
 cl_kernel kernel;
+cl_kernel km_kernel;
 
 cl_mem input_jnt_angles_buf;
 cl_mem output_trig_vals_buf;
+cl_mem output_ee_pose_buf;
 
 // Input data
 uint* input_jnt_angles;
 long* output_trig_vals;
+long* output_ee_pose;
 
 
 // Function prototypes
@@ -206,6 +209,10 @@ bool initOpencl() {
 	kernel = clCreateKernel(program, kernel_name, &err);
 	checkStatus(err, __FILE__, __LINE__, "'clCreateKernel()' failed");
 
+	const char* km_kernel_name = "get_pose_by_jnts_int_32";
+	km_kernel = clCreateKernel(program, km_kernel_name, &err);
+	checkStatus(err, __FILE__, __LINE__, "'clCreateKernel()' failed");
+
 	// Create the input buffer
 	input_jnt_angles_buf = clCreateBuffer(context, CL_MEM_READ_ONLY, NUMBER_OF_ELEMS * sizeof(uint), NULL, &err);
 	checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'input_jnt_angles_buf' failed");
@@ -214,6 +221,8 @@ bool initOpencl() {
 	output_trig_vals_buf = clCreateBuffer(context, CL_MEM_WRITE_ONLY, NUMBER_OF_ELEMS * sizeof(long), NULL, &err);
 	checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'output_trig_vals_buf' failed");
 
+	output_ee_pose_buf = clCreateBuffer(context, CL_MEM_WRITE_ONLY, NUMBER_OF_ELEMS * sizeof(long), NULL, &err);
+	checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'output_ee_pose_buf' failed");
 
 	printf("FINISH INIT.\n");
 	return true;
@@ -260,6 +269,11 @@ void initInput() {
 	// 	printf("ja[%d] = %u\n", i, input_jnt_angles[i]);
 	// }
 	// TODO: verification output
+}
+
+
+void _initInput() {
+	output_ee_pose = new long[NUMBER_OF_ELEMS];
 }
 
 
