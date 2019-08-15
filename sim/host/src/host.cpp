@@ -287,6 +287,7 @@ void initInput() {
 
 
 void initKMInput() {
+	input_trig_vals = new long[NUMBER_OF_ELEMS];
 	output_ee_pose = new long[3];
 }
 
@@ -360,10 +361,10 @@ void runKM() {
 	cl_event finish_event;
 
 	// Enqueue write commands to the input buffer
-	cl_event write_events[1];
-	err = clEnqueueWriteBuffer(command_queue, output_trig_vals_buf, CL_FALSE,
-			0, NUMBER_OF_ELEMS * sizeof(long), input_trig_vals, 0, NULL, &write_events[0]);
-	checkStatus(err, __FILE__, __LINE__, "'clEnqueueWriteBuffer()' for 'output_trig_vals_buf' failed");
+	// cl_event write_events[1];
+	// err = clEnqueueWriteBuffer(command_queue, output_trig_vals_buf, CL_FALSE,
+	// 		0, NUMBER_OF_ELEMS * sizeof(long), input_trig_vals, 0, NULL, &write_events[0]);
+	// checkStatus(err, __FILE__, __LINE__, "'clEnqueueWriteBuffer()' for 'output_trig_vals_buf' failed");
 
 	// Set kernel argument
 	unsigned argi = 0;
@@ -379,7 +380,7 @@ void runKM() {
 	// Launch the kernel
 	const size_t global_work_size = 1;
 	err = clEnqueueNDRangeKernel(command_queue, kernel, 1, NULL,
-			&global_work_size, NULL, 1, write_events, &kernel_event);
+			&global_work_size, NULL, 0, NULL, &kernel_event);
 	checkStatus(err, __FILE__, __LINE__, "'clEnqueueNDRangeKernel()' failed");
 
 	// Enqueue read commands on the output buffer
@@ -389,7 +390,7 @@ void runKM() {
 	checkStatus(err, __FILE__, __LINE__, "'clEnqueueReadBuffer()' failed");
 
 	// Release local event
-	clReleaseEvent(write_events[0]);
+	// clReleaseEvent(write_events[0]);
 
 	// Wait for the output write to finish
 	clWaitForEvents(1, &finish_event);
