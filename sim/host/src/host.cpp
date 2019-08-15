@@ -53,6 +53,8 @@ cl_mem output_ee_pose_buf;
 // Input data
 uint* input_jnt_angles;
 long* output_trig_vals;
+
+long* input_trig_vals;
 long* output_ee_pose;
 
 
@@ -63,7 +65,9 @@ uint convertRadsToInt(double radians);
 double convertTrigEncToVal(long enc);
 bool initOpencl();
 void initInput();
+void initKMInput();
 void run();
+void runKM();
 void cleanup();
 
 
@@ -78,18 +82,28 @@ int main(int argc, char** argv) {
 
 	while (1) {
 		initInput();
+		initKMInput();
 
 		printf("\nKernel initialization is complete.\n");
 		printf("Launching the kernel...\n\n");
 
 		run();
 
+		printf("Output from kernel 1:\n");
+		printf("------------------------\n");
 		for (int i = 0; i < NUMBER_OF_ELEMS; ++i) {
 			// printf("In radians: %u\n", input_jnt_angles[i]);
 			printf("In encoding: %d: %ld\n", i, output_trig_vals[i]);
 			// printf("Converted back: %lf\n", convertTrigEncToVal(output_trig_vals[i]));
 			printf("-----------------------------\n");
 		}
+
+		runKM();
+
+		printf("\nOutput from kernel 2:\n");
+		printf("X = %ld\n", output_ee_pose[0]);
+		printf("Y = %ld\n", output_ee_pose[1]);
+		printf("Z = %ld\n", output_ee_pose[2]);
 
 		printf("\nTo continue, please enter any key.\n");
 		char c;
@@ -221,7 +235,7 @@ bool initOpencl() {
 	output_trig_vals_buf = clCreateBuffer(context, CL_MEM_WRITE_ONLY, NUMBER_OF_ELEMS * sizeof(long), NULL, &err);
 	checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'output_trig_vals_buf' failed");
 
-	output_ee_pose_buf = clCreateBuffer(context, CL_MEM_WRITE_ONLY, NUMBER_OF_ELEMS * sizeof(long), NULL, &err);
+	output_ee_pose_buf = clCreateBuffer(context, CL_MEM_WRITE_ONLY, 3 * sizeof(long), NULL, &err);
 	checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'output_ee_pose_buf' failed");
 
 	printf("FINISH INIT.\n");
@@ -272,8 +286,8 @@ void initInput() {
 }
 
 
-void _initInput() {
-	output_ee_pose = new long[NUMBER_OF_ELEMS];
+void initKMInput() {
+	output_ee_pose = new long[3];
 }
 
 
@@ -336,9 +350,71 @@ void run() {
 }
 
 
+void runKM() {
+	cl_int err;
+
+	struct timespec begin, end;
+	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &begin);
+
+	cl_event kernel_event;
+	cl_event finish_event;
+
+	// Enqueue write commands to the input buffer
+	cl_event write_events[1];
+	err = clEnqueueWriteBuffer(command_queue, output_trig_vals_buf, CL_FALSE,
+			0, NUMBER_OF_ELEMS * sizeof(long), input_trig_vals, 0, NULL, &write_events[0]);
+	checkStatus(err, __FILE__, __LINE__, "'clEnqueueWriteBuffer()' for 'output_trig_vals_buf' failed");
+
+	// Set kernel argument
+	unsigned argi = 0;
+
+	err = clSetKernelArg(km_kernel, argi++, sizeof(cl_mem),
+			&output_trig_vals_buf);
+	checkStatus(err, __FILE__, __LINE__, "'clSetKernelArg()' failed");
+
+	err = clSetKernelArg(kernel, argi++, sizeof(cl_mem),
+			&output_ee_pose_buf);
+	checkStatus(err, __FILE__, __LINE__, "'clSetKernelArg()' failed");
+
+	// Launch the kernel
+	const size_t global_work_size = 1;
+	err = clEnqueueNDRangeKernel(command_queue, kernel, 1, NULL,
+			&global_work_size, NULL, 1, write_events, &kernel_event);
+	checkStatus(err, __FILE__, __LINE__, "'clEnqueueNDRangeKernel()' failed");
+
+	// Enqueue read commands on the output buffer
+	err = clEnqueueReadBuffer(command_queue, output_ee_pose_buf, CL_FALSE, 0,
+			3 * sizeof(long), output_ee_pose, 1, &kernel_event,
+			&finish_event);
+	checkStatus(err, __FILE__, __LINE__, "'clEnqueueReadBuffer()' failed");
+
+	// Release local event
+	clReleaseEvent(write_events[0]);
+
+	// Wait for the output write to finish
+	clWaitForEvents(1, &finish_event);
+
+
+	// clock_t end = clock();
+	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+	double elapsed_time = (end.tv_sec - begin.tv_sec) * 1e6 + (end.tv_nsec - begin.tv_nsec) / 1e3;
+
+	// double elapsed_time = double(end - begin) / CLOCKS_PER_SEC;
+	printf("Kernel time: %0.3lf microseconds.\n", elapsed_time);
+
+	// Release all events
+	clReleaseEvent(kernel_event);
+	clReleaseEvent(finish_event);
+}
+
+
 void cleanup() {
 	if (kernel) {
 		clReleaseKernel(kernel);
+	}
+
+	if (km_kernel) {
+		clReleaseKernel(km_kernel);
 	}
 
 	if (program) {
@@ -361,6 +437,10 @@ void cleanup() {
 		clReleaseMemObject(output_trig_vals_buf);
 	}
 
+	if (output_ee_pose_buf) {
+		clReleaseMemObject(output_ee_pose_buf);
+	}
+
 	if (input_jnt_angles) {
 		delete[] input_jnt_angles;
 	}
@@ -369,6 +449,9 @@ void cleanup() {
 		delete[] output_trig_vals;
 	}
 
+	if (output_ee_pose) {
+		delete[] output_ee_pose;
+	}
 
 	printf("FINISH CLEANUP.\n");
 }
