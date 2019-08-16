@@ -1,5 +1,5 @@
 __kernel void cosine_int_32(__global const uint* restrict jnt_angles,
-							__global long* restrict output) {
+							__global ulong* restrict output) {
 
 	__local char grad_table_32[4095];
 	__local long intercept_table_32[4095];
@@ -44,12 +44,13 @@ __kernel void cosine_int_32(__global const uint* restrict jnt_angles,
 	uint angle_idx = (angle_input & 0xFFF00000) >> 20;
 
 	// obtain trigonometry encoding value at that LUT index
-	output[idx] = (long) grad_table_32[angle_idx] * angle_input + intercept_table_32[angle_idx];
+	output[idx] = (ulong) grad_table_32[angle_idx] * angle_input + intercept_table_32[angle_idx];
+	printf("rad = %u, output[%d] = %lu\n", angle_input, idx, output[idx]);
 }
 
 
 __kernel void get_pose_by_jnts_int_32(__global const long* restrict trig_vals,
-										__global long* ee_pose) {
+										__global ulong* restrict ee_pose) {
 	__local long link_lengths[4];
 
 	// Link lengths in integer-encoding

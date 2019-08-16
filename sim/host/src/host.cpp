@@ -48,14 +48,15 @@ cl_kernel km_kernel;
 
 cl_mem input_jnt_angles_buf;
 cl_mem output_trig_vals_buf;
+// cl_mem input_trig_vals_buf;
 cl_mem output_ee_pose_buf;
 
 // Input data
 uint* input_jnt_angles;
-long* output_trig_vals;
+ulong* output_trig_vals;
 
-long* input_trig_vals;
-long* output_ee_pose;
+// long* input_trig_vals;
+ulong* output_ee_pose;
 
 
 // Function prototypes
@@ -93,7 +94,7 @@ int main(int argc, char** argv) {
 		printf("------------------------\n");
 		for (int i = 0; i < NUMBER_OF_ELEMS; ++i) {
 			// printf("In radians: %u\n", input_jnt_angles[i]);
-			printf("In encoding: %d: %ld\n", i, output_trig_vals[i]);
+			printf("In encoding: %d: %lu\n", i, output_trig_vals[i]);
 			// printf("Converted back: %lf\n", convertTrigEncToVal(output_trig_vals[i]));
 			printf("-----------------------------\n");
 		}
@@ -101,9 +102,9 @@ int main(int argc, char** argv) {
 		runKM();
 
 		printf("\nOutput from kernel 2:\n");
-		printf("X = %ld\n", output_ee_pose[0]);
-		printf("Y = %ld\n", output_ee_pose[1]);
-		printf("Z = %ld\n", output_ee_pose[2]);
+		printf("X = %lu\n", output_ee_pose[0]);
+		printf("Y = %lu\n", output_ee_pose[1]);
+		printf("Z = %lu\n", output_ee_pose[2]);
 
 		printf("\nTo continue, please enter any key.\n");
 		char c;
@@ -231,11 +232,14 @@ bool initOpencl() {
 	input_jnt_angles_buf = clCreateBuffer(context, CL_MEM_READ_ONLY, NUMBER_OF_ELEMS * sizeof(uint), NULL, &err);
 	checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'input_jnt_angles_buf' failed");
 
+	// input_trig_vals_buf = clCreateBuffer(context, CL_MEM_READ_ONLY, NUMBER_OF_ELEMS * sizeof(long), NULL, &err);
+	// checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'input_trig_vals_buf' failed");
+
 	// Create the output buffer
-	output_trig_vals_buf = clCreateBuffer(context, CL_MEM_WRITE_ONLY, NUMBER_OF_ELEMS * sizeof(long), NULL, &err);
+	output_trig_vals_buf = clCreateBuffer(context, CL_MEM_WRITE_ONLY, NUMBER_OF_ELEMS * sizeof(ulong), NULL, &err);
 	checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'output_trig_vals_buf' failed");
 
-	output_ee_pose_buf = clCreateBuffer(context, CL_MEM_WRITE_ONLY, 3 * sizeof(long), NULL, &err);
+	output_ee_pose_buf = clCreateBuffer(context, CL_MEM_WRITE_ONLY, 3 * sizeof(ulong), NULL, &err);
 	checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'output_ee_pose_buf' failed");
 
 	printf("FINISH INIT.\n");
@@ -245,19 +249,21 @@ bool initOpencl() {
 
 void initInput() {
 	input_jnt_angles = new uint[NUMBER_OF_ELEMS];
-	output_trig_vals = new long[NUMBER_OF_ELEMS];
+	output_trig_vals = new ulong[NUMBER_OF_ELEMS];
 
 	// Randomize the input elements
 	double ja_0, ja_1, ja_2;		// cosine angle radians
 	double _ja_0, _ja_1, _ja_2;	// sine angle radians (offset -pi/2, expressed by cosine)
 
-	ja_0 = randAngleRads(JNT0_L, JNT0_U); _ja_0 = ja_0 - (M_PI / 2);
-	ja_1 = randAngleRads(JNT1_L, JNT1_U); _ja_1 = ja_1 - (M_PI / 2);
-	ja_2 = randAngleRads(JNT2_L, JNT2_U); _ja_2 = ja_2 - (M_PI / 2);
+	// ja_0 = randAngleRads(JNT0_L, JNT0_U); _ja_0 = ja_0 - (M_PI / 2);
+	// ja_1 = randAngleRads(JNT1_L, JNT1_U); _ja_1 = ja_1 - (M_PI / 2);
+	// ja_2 = randAngleRads(JNT2_L, JNT2_U); _ja_2 = ja_2 - (M_PI / 2);
 
-	// ja_0 = 1.068731;
-	// ja_1 = 0.894826;
-	// ja_2 = -0.340707;
+	ja_0 = 1.068731;
+	ja_1 = 0.894826;
+	ja_2 = -0.340707;
+
+	printf("%u\n", convertRadsToInt(ja_2));
 	// _ja_0 = -0.502065;
 	// _ja_1 = -0.675970;
 	// _ja_2 = -1.911503;
@@ -272,11 +278,11 @@ void initInput() {
 
 	// Convert radians to corresponding integer encoding
 	input_jnt_angles[0] = convertRadsToInt(ja_0);
-	input_jnt_angles[1] = convertRadsToInt(ja_1);
-	input_jnt_angles[2] = convertRadsToInt(ja_2);
-	input_jnt_angles[3] = convertRadsToInt(_ja_0);
-	input_jnt_angles[4] = convertRadsToInt(_ja_1);
-	input_jnt_angles[5] = convertRadsToInt(_ja_2);
+	input_jnt_angles[1] = 112855247 + convertRadsToInt(ja_1) ;
+	input_jnt_angles[2] = 7877904265 - convertRadsToInt(ja_2) - convertRadsToInt(ja_1);
+	input_jnt_angles[3] = -1104420162 + convertRadsToInt(ja_0);
+	input_jnt_angles[4] = -991564915 + convertRadsToInt(ja_1);
+	input_jnt_angles[5] = 6773484103 - convertRadsToInt(ja_2) - convertRadsToInt(ja_1);
 	
 	// printf("After conversion:\n");
 	// for (int i = 0; i < NUMBER_OF_ELEMS; ++i) {
@@ -287,8 +293,8 @@ void initInput() {
 
 
 void initKMInput() {
-	input_trig_vals = new long[NUMBER_OF_ELEMS];
-	output_ee_pose = new long[3];
+	// input_trig_vals = new long[NUMBER_OF_ELEMS];
+	output_ee_pose = new ulong[3];
 }
 
 
@@ -327,7 +333,7 @@ void run() {
 
 	// Enqueue read commands on the output buffer
 	err = clEnqueueReadBuffer(command_queue, output_trig_vals_buf, CL_FALSE, 0,
-			NUMBER_OF_ELEMS * sizeof(long), output_trig_vals, 1, &kernel_event,
+			NUMBER_OF_ELEMS * sizeof(ulong), output_trig_vals, 1, &kernel_event,
 			&finish_event);
 	checkStatus(err, __FILE__, __LINE__, "'clEnqueueReadBuffer()' failed");
 
@@ -366,6 +372,11 @@ void runKM() {
 	// 		0, NUMBER_OF_ELEMS * sizeof(long), input_trig_vals, 0, NULL, &write_events[0]);
 	// checkStatus(err, __FILE__, __LINE__, "'clEnqueueWriteBuffer()' for 'output_trig_vals_buf' failed");
 
+	// err = clEnqueueWriteBuffer(command_queue, input_trig_vals_buf, CL_FALSE,
+	// 		0, NUMBER_OF_ELEMS * sizeof(long), output_trig_vals, 0, NULL, &write_events[0]);
+	// checkStatus(err, __FILE__, __LINE__, "'clEnqueueWriteBuffer()' for 'input_trig_vals_buf' failed");
+
+
 	// Set kernel argument
 	unsigned argi = 0;
 
@@ -373,19 +384,19 @@ void runKM() {
 			&output_trig_vals_buf);
 	checkStatus(err, __FILE__, __LINE__, "'clSetKernelArg()' failed");
 
-	err = clSetKernelArg(kernel, argi++, sizeof(cl_mem),
+	err = clSetKernelArg(km_kernel, argi++, sizeof(cl_mem),
 			&output_ee_pose_buf);
 	checkStatus(err, __FILE__, __LINE__, "'clSetKernelArg()' failed");
 
 	// Launch the kernel
 	const size_t global_work_size = 1;
-	err = clEnqueueNDRangeKernel(command_queue, kernel, 1, NULL,
+	err = clEnqueueNDRangeKernel(command_queue, km_kernel, 1, NULL,
 			&global_work_size, NULL, 0, NULL, &kernel_event);
 	checkStatus(err, __FILE__, __LINE__, "'clEnqueueNDRangeKernel()' failed");
 
 	// Enqueue read commands on the output buffer
 	err = clEnqueueReadBuffer(command_queue, output_ee_pose_buf, CL_FALSE, 0,
-			3 * sizeof(long), output_ee_pose, 1, &kernel_event,
+			3 * sizeof(ulong), output_ee_pose, 1, &kernel_event,
 			&finish_event);
 	checkStatus(err, __FILE__, __LINE__, "'clEnqueueReadBuffer()' failed");
 
@@ -433,6 +444,10 @@ void cleanup() {
 	if (input_jnt_angles_buf) {
 		clReleaseMemObject(input_jnt_angles_buf);
 	}
+
+	// if (input_trig_vals_buf) {
+	// 	clReleaseMemObject(input_trig_vals_buf);
+	// }
 
 	if (output_trig_vals_buf) {
 		clReleaseMemObject(output_trig_vals_buf);
