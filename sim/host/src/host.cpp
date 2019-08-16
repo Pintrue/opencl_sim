@@ -263,7 +263,7 @@ void initInput() {
 	ja_1 = 0.894826;
 	ja_2 = -0.340707;
 
-	printf("%u\n", convertRadsToInt(ja_2));
+	uint delta_ja_int[3] = {convertRadsToInt(ja_0), convertRadsToInt(ja_1), convertRadsToInt(ja_2)};
 	// _ja_0 = -0.502065;
 	// _ja_1 = -0.675970;
 	// _ja_2 = -1.911503;
@@ -277,12 +277,12 @@ void initInput() {
 	// printf("ja[5] = %lf\n", _ja_2);
 
 	// Convert radians to corresponding integer encoding
-	input_jnt_angles[0] = convertRadsToInt(ja_0);
-	input_jnt_angles[1] = 112855247 + convertRadsToInt(ja_1) ;
-	input_jnt_angles[2] = 7877904265 - convertRadsToInt(ja_2) - convertRadsToInt(ja_1);
-	input_jnt_angles[3] = -1104420162 + convertRadsToInt(ja_0);
-	input_jnt_angles[4] = -991564915 + convertRadsToInt(ja_1);
-	input_jnt_angles[5] = 6773484103 - convertRadsToInt(ja_2) - convertRadsToInt(ja_1);
+	input_jnt_angles[0] = delta_ja_int[0];
+	input_jnt_angles[1] = 112855247 + delta_ja_int[1];
+	input_jnt_angles[2] = 7877904265 - delta_ja_int[2] - delta_ja_int[1];
+	input_jnt_angles[3] = -1104420162 + delta_ja_int[0];
+	input_jnt_angles[4] = -991564915 + delta_ja_int[1];
+	input_jnt_angles[5] = 6773484103 - delta_ja_int[2] - delta_ja_int[1];
 	
 	// printf("After conversion:\n");
 	// for (int i = 0; i < NUMBER_OF_ELEMS; ++i) {
