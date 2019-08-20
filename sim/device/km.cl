@@ -54,22 +54,22 @@ __kernel void get_pose_by_jnts_int_32(__global const long* restrict trig_vals,
 	__local long link_lengths[4];
 
 	// Link lengths in integer-encoding
-	link_lengths[0] = 290;	// base height
-	link_lengths[1] = 524;
-	link_lengths[2] = 1064;
-	link_lengths[3] = 1687;
+	// 290 = 290;	// base height
+	// 524 = 524;
+	// 1064 = 1064;
+	// 1687 = 1687;
 
-	long d2 = link_lengths[0];
-	long d3 = link_lengths[1] * 3581808896;		// l1 * sin(a2)
-	long d4 = link_lengths[2] * trig_vals[4];	// l2 * sin(a3)
-	long d5 = link_lengths[3] * trig_vals[5];	// l3 * sin(a4)
+	long d2 = 290;
+	long d3 = 524 * 3581808896;		// l1 * sin(a2)
+	long d4 = 1064 * trig_vals[4];	// l2 * sin(a3)
+	long d5 = 1687 * trig_vals[5];	// l3 * sin(a4)
 
 	// Aggregate the four sections above to obtain Y-coordinate
 	ee_pose[1] = d2 + d3 + d4 + d5;
 
-	long d6 = link_lengths[3] * trig_vals[2];	// l3 * cos(a4)
-	long d7 = link_lengths[2] * trig_vals[1];	// l2 * cos(a3)
-	long d8 = link_lengths[1] * 3745731782; 	// l1 * cos(a2)
+	long d6 = 1687 * trig_vals[2];	// l3 * cos(a4)
+	long d7 = 1064 * trig_vals[1];	// l2 * cos(a3)
+	long d8 = 524 * 3745731782; 	// l1 * cos(a2)
 
 	long d1 = d6 - d7 + d8;
 
