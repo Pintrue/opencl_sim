@@ -253,7 +253,7 @@ void initInput() {
 
 	// Randomize the input elements
 	double ja_0, ja_1, ja_2;		// cosine angle radians
-	double _ja_0, _ja_1, _ja_2;	// sine angle radians (offset -pi/2, expressed by cosine)
+	double _ja_0, _ja_1, _ja_2;		// sine angle radians (offset -pi/2, expressed by cosine)
 
 	// ja_0 = randAngleRads(JNT0_L, JNT0_U); _ja_0 = ja_0 - (M_PI / 2);
 	// ja_1 = randAngleRads(JNT1_L, JNT1_U); _ja_1 = ja_1 - (M_PI / 2);
