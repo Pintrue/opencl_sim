@@ -15,8 +15,8 @@ class Sim {
         int _num_of_steps;      // # of times sim has been forwarded
 
         // Arm variables
-        double _init_joint_angles[NUM_OF_JOINTS]    // initial angle
-        double _joint_angles[NUM_OF_JOINTS];        // angles between segments
+        double _init_joint_angles[NUM_OF_JOINTS];   // initial angle
+        double _curr_joint_angles[NUM_OF_JOINTS];        // angles between segments
         double _cart_pose[3];                       // end-effector pos arm is at
         bool _ee_state;                             // whether magnet is charged
 

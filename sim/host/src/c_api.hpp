@@ -9,6 +9,10 @@ typedef struct _matrix_t {
 } matrix_t;
 
 
+#ifndef M_PI
+    #define M_PI 3.14159265359
+#endif
+
 #define JNT0_L -M_PI/2
 #define JNT0_U M_PI/2
 #define JNT1_L 0.0
@@ -17,8 +21,8 @@ typedef struct _matrix_t {
 #define JNT2_U 0.0
 
 
-// #define PICK_N_PLACE
 #define REACHING
+// #define PICK_N_PLACE
 
 #ifdef REACHING
     #define FULL_STATE_NUM_COLS 14
@@ -41,6 +45,12 @@ typedef struct _matrix_t {
 #define REACHING_TERMINAL_BIT_OFFSET (REACHING_SND_EE_POS_OFFSET + 3)
 #define REACHING_REWARD_BIT_OFFSET (REACHING_TERMINAL_BIT_OFFSET + 1)
 
+#define REACHING_WORKSPACE_X_LOWER -10.5
+#define REACHING_WORKSPACE_X_UPPER 10.5
+#define REACHING_WORKSPACE_Z_LOWER 12.5
+#define REACHING_WORKSPACE_Z_UPPER 22.5
+#define REACHING_EE_AT_DEST_RANGE 1.0
+
 #define PNP_EE_POS_OFFSET 3
 #define PNP_EE_STATE_OFFSET (PNP_EE_POS_OFFSET + 3)
 #define PNP_FST_OBJ_POS_OFFSET (PNP_EE_STATE_OFFSET + 1)
@@ -49,6 +59,23 @@ typedef struct _matrix_t {
 #define PNP_SND_OBJ_POS_OFFSET (PNP_DEST_POS_OFFSET + 3)
 #define PNP_TERMINAL_BIT_OFFSET (PNP_SND_OBJ_POS_OFFSET + 3)
 #define PNP_REWARD_BIT_OFFSET (PNP_TERMINAL_BIT_OFFSET + 1)
+
+#define PNP_OBJ_X_LOWER -10.5
+#define PNP_OBJ_X_UPPER 10.5
+#define PNP_OBJ_Z_LOWER 12.5
+#define PNP_OBJ_Z_UPPER 19.5
+#define PNP_OBJ_HEIGHT 0.5
+
+#define PNP_WORKSPACE_X_LOWER -10.5
+#define PNP_WORKSPACE_X_UPPER 10.5
+#define PNP_WORKSPACE_Z_LOWER 12.5
+#define PNP_WORKSPACE_Z_UPPER 19.5
+#define PNP_OBJ_AT_DEST_RANGE 3.0
+#define PNP_OBJ_ATTACHED_RANGE 1.0
+
+#define ACTION_BOUND_LOWER -0.0872664626
+#define ACTION_BOUND_UPPER 0.0872664626
+
 
 
 int initEnv(int act_dim, int task_flag);

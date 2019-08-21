@@ -1,5 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <iostream>
+#include <assert.h>
+#include <math.h>
 #include "c_api.hpp"
 #include "sim.hpp"
 
@@ -11,7 +14,15 @@ static Sim sim;
 int _task_flag;
 
 matrix_t* resetStateReaching(int rand_angle, int dest_pos, int state_dim, int act_dim);
-matrix_t* resetStatePickNPlace(int rand_angle, int dest_pos, int state_dim, int act_dim);
+matrix_t* resetStatePnP(int rand_angle, int dest_pos, int state_dim, int act_dim);
+matrix_t* stepReaching(matrix_t* action, int state_dim, int act_dim);
+matrix_t* stepPnP(matrix_t* action, int state_dim, int act_dim);
+void setReachingRewardBit(double full_state[FULL_STATE_NUM_COLS]);
+void setPnPRewardBit(double full_state[FULL_STATE_NUM_COLS]);
+bool regulatedJntAngles(const double curr_jnt_angles[NUM_OF_JOINTS],
+						const double delta[ACTION_DIM],
+						double new_state[FULL_STATE_NUM_COLS]);
+
 
 matrix_t* new_matrix(int rows, int cols) {
 	matrix_t* new_mat = (matrix_t*) malloc(sizeof(matrix_t));
@@ -24,7 +35,14 @@ matrix_t* new_matrix(int rows, int cols) {
 }
 
 
-double randAngleRads(double lower, double upper) {
+void free_matrix(matrix_t* mat) {
+	free(mat->data);
+	free(mat);
+}
+
+
+double randUniform(double lower, double upper) {
+	assert(upper >= lower);
 	return lower + (rand() / (double(RAND_MAX) / (upper - lower)));
 }
 
@@ -51,7 +69,7 @@ matrix_t* resetState(int rand_angle, int dest_pos, int state_dim, int act_dim) {
 	if (_task_flag == REACHING_TASK_FLAG) {
 		ret = resetStateReaching(rand_angle, dest_pos, state_dim, act_dim);
 	} else if (_task_flag == PICK_N_PLACE_TASK_FLAG) {
-		ret = resetStatePickNPlace(rand_angle, dest_pos, state_dim, act_dim);
+		ret = resetStatePnP(rand_angle, dest_pos, state_dim, act_dim);
 	} else {
 		cout << "ERROR: Unrecognized flag encountered at " << __LINE__
 			<< " in file " << __FILE__; 
@@ -68,10 +86,68 @@ matrix_t* resetStateReaching(int rand_angle, int dest_pos, int state_dim, int ac
 
 	sim._num_of_steps = 0;
 
+
+	// set initial angle configurations
 	if (rand_angle == 1) {
-		data[0] = randAngleRads(JNT0_L, JNT0_U);
-		data[1] = randAngleRads(JNT1_L, JNT1_U);
-		data[2] = randAngleRads(JNT2_L, JNT2_U);
+		data[0] = randUniform(JNT0_L, JNT0_U);
+		data[1] = randUniform(JNT1_L, JNT1_U);
+		data[2] = randUniform(JNT2_L, JNT2_U);
+	} else {
+		for (int i = 0; i < NUM_OF_JOINTS; ++i) {
+			data[i] = 0;
+		}
+	}
+
+
+	double ee_pos[6];
+
+	for (int i = 0; i < NUM_OF_JOINTS; ++i) {
+		sim._init_joint_angles[i] = data[i];
+		sim._curr_joint_angles[i] = data[i];
+	}
+
+
+	// TODO: get pos from kernel
+
+
+	// set initial arm pose
+	for (int i = 0; i < 3; ++i) {
+		data[REACHING_FST_EE_POS_OFFSET + i] = ee_pos[i];
+		data[REACHING_SND_EE_POS_OFFSET + i] = ee_pos[i];
+	}
+
+
+	// set destination position
+	if (dest_pos == 1) {
+		data[REACHING_DEST_POS_OFFSET + 0] = randUniform(REACHING_WORKSPACE_X_LOWER, REACHING_WORKSPACE_X_UPPER);
+		data[REACHING_DEST_POS_OFFSET + 1] = 0;
+		data[REACHING_DEST_POS_OFFSET + 2] = randUniform(REACHING_WORKSPACE_Z_LOWER, REACHING_WORKSPACE_Z_UPPER);
+	} else {
+		data[REACHING_DEST_POS_OFFSET] = 0;
+		data[REACHING_DEST_POS_OFFSET + 1] = 0;
+		data[REACHING_DEST_POS_OFFSET + 2] = 17.33;
+	}
+
+
+	// set termination and reward bits
+	data[REACHING_TERMINAL_BIT_OFFSET] = 0;	// terminal flag
+	data[REACHING_REWARD_BIT_OFFSET] = -1;	// reward bit
+
+	return ret;
+}
+
+
+matrix_t* resetStatePnP(int rand_angle, int dest_pos, int state_dim, int act_dim) {
+	matrix_t* ret = new_matrix(1, FULL_STATE_NUM_COLS);
+	double* data = ret->data;
+
+	sim._num_of_steps = 0;
+
+	// set initial angle configurations
+	if (rand_angle == 1) {
+		data[0] = randUniform(JNT0_L, JNT0_U);
+		data[1] = randUniform(JNT1_L, JNT1_U);
+		data[2] = randUniform(JNT2_L, JNT2_U);
 	} else {
 		for (int i = 0; i < NUM_OF_JOINTS; ++i) {
 			data[i] = 0;
@@ -80,33 +156,257 @@ matrix_t* resetStateReaching(int rand_angle, int dest_pos, int state_dim, int ac
 
 	double ee_pos[6];
 
-	for (int i = 0; i < NUM_OF_JOINTS; ++i) {
+	for (int i = 0; i < 3; ++i) {
 		sim._init_joint_angles[i] = data[i];
-		sim._joint_angles[i] = data[i];
+		sim._curr_joint_angles[i] = data[i];
 	}
 
 
-	// TODO: get angle from kernel
+	// TODO: get pos from kernel
+
+	// set initial arm pose
+	for (int i = 0; i < 3; ++i) {
+		data[PNP_EE_POS_OFFSET + i] = ee_pos[i];
+	}
+
+	
+	data[PNP_EE_STATE_OFFSET] = 0;
+
+
+	// set object position
+	data[PNP_FST_OBJ_POS_OFFSET] = randUniform(PNP_OBJ_X_LOWER, PNP_OBJ_X_UPPER);
+	data[PNP_FST_OBJ_POS_OFFSET + 1] = PNP_OBJ_HEIGHT;
+	data[PNP_FST_OBJ_POS_OFFSET + 2] = randUniform(PNP_OBJ_Z_LOWER, PNP_OBJ_Z_UPPER);
+
+	for (int i = 0; i < 3; ++i) {
+		data[PNP_SND_OBJ_POS_OFFSET + i] = data[PNP_FST_OBJ_POS_OFFSET + i];
+		sim._init_obj[i] = data[PNP_FST_OBJ_POS_OFFSET + i];
+		sim._obj[i] = data[PNP_FST_OBJ_POS_OFFSET + i];
+	}
+
+	
+	// set object attachment status
+	data[PNP_HAS_OBJ_OFFSET] = 0;
+
+
+	// set destination position
+	if (dest_pos == 1) {
+		data[PNP_DEST_POS_OFFSET] = randUniform(PNP_WORKSPACE_X_LOWER, PNP_WORKSPACE_X_UPPER);
+		data[PNP_DEST_POS_OFFSET + 1] = 0;
+		data[PNP_DEST_POS_OFFSET + 2] = randUniform(PNP_WORKSPACE_Z_LOWER, PNP_WORKSPACE_Z_UPPER);
+	} else {
+		data[PNP_DEST_POS_OFFSET] = -7.495477e+00;
+		data[PNP_DEST_POS_OFFSET + 1] = 0.000000e+00;
+		data[PNP_DEST_POS_OFFSET + 2] = 1.870172e+01;
+	}
+
+	for (int i = 0; i < 3; ++i) {
+		sim._dest[i] = data[PNP_DEST_POS_OFFSET + i];
+	}
+
+
+	// set termination and reward bits
+	data[PNP_TERMINAL_BIT_OFFSET] = 0;	// terminal flag
+	data[PNP_REWARD_BIT_OFFSET] = -1;	// reward bit
+}
+
+
+matrix_t* denormalizeAction(matrix_t* action) {
+	matrix_t* ret = new_matrix(action->rows, action->cols);
+
+	for (int i = 0; i < 3; ++i) {
+		ret->data[i] = (double) (action->data[i] + 1) / (double) 2 * (ACTION_BOUND_UPPER - ACTION_BOUND_LOWER) + ACTION_BOUND_LOWER;
+	}
+
+	return ret;
+}
+
+
+bool regulatedJntAngles(const double curr_jnt_angles[NUM_OF_JOINTS],
+						const double delta[ACTION_DIM],
+						double new_state[FULL_STATE_NUM_COLS]) {
+
+	double res_jnt_angles[NUM_OF_JOINTS];
+
+	for (int i = 0; i < NUM_OF_JOINTS; ++i) {
+		res_jnt_angles[i] = curr_jnt_angles[i] + delta[i];
+	}
+
+	new_state[0] = min(max(res_jnt_angles[0], JNT0_L), JNT0_U);
+	new_state[1] = min(max(res_jnt_angles[1], JNT1_L), JNT1_U);
+	new_state[2] = min(max(res_jnt_angles[2], JNT2_L), JNT2_U);
+
+	return (res_jnt_angles[0] == new_state[0])
+			&& (res_jnt_angles[1] == new_state[1])
+			&& (res_jnt_angles[2] == new_state[2]);
+}
+
+
+void setReachingRewardBit(double full_state[FULL_STATE_NUM_COLS]) {
+	double diff = 0;
+
+	for (int i = 0; i < 3; ++i) {
+		double delta = full_state[REACHING_DEST_POS_OFFSET + i]
+						- full_state[REACHING_FST_EE_POS_OFFSET + i];
+		diff += delta * delta;
+	}
+
+	bool at_dest = sqrt(diff) <= REACHING_EE_AT_DEST_RANGE;
+	full_state[REACHING_REWARD_BIT_OFFSET] = at_dest ? 0 : -1;
+}
+
+
+void setPnPRewardBit(double full_state[FULL_STATE_NUM_COLS]) {
+	double diff = 0;
+
+	for (int i = 0; i < 3; ++i) {
+		double delta = full_state[PNP_FST_OBJ_POS_OFFSET + i]
+						- full_state[PNP_DEST_POS_OFFSET + i];
+		diff += delta * delta;
+	}
+
+	bool obj_at_dest = sqrt(diff) <= PNP_OBJ_AT_DEST_RANGE;
+	full_state[PNP_REWARD_BIT_OFFSET] = (obj_at_dest && full_state[PNP_EE_STATE_OFFSET])
+											? 0 : -1;
+}
+
+
+matrix_t* step(matrix_t* action, int state_dim, int act_dim) {
+	matrix_t* ret;
+
+	if (_task_flag == REACHING_TASK_FLAG) {
+		ret = stepReaching(action, state_dim, act_dim);
+	} else if (_task_flag == PICK_N_PLACE_TASK_FLAG) {
+		ret = stepPnP(action, state_dim, act_dim);
+	} else {
+		cout << "ERROR: Unrecognized flag encountered at " << __LINE__
+			<< " in file " << __FILE__; 
+		exit(-1);
+	}
+
+	return ret;
+}
+
+
+matrix_t* stepReaching(matrix_t* action, int state_dim, int act_dim) {
+	matrix_t* ret = new_matrix(1, FULL_STATE_NUM_COLS);
+	double* data = ret->data;
+
+	matrix_t* denormed_mat = denormalizeAction(action);
+	regulatedJntAngles(sim._curr_joint_angles, denormed_mat->data, data);
+
+	// set the new angle after action is applied
+	for (int i = 0; i < NUM_OF_JOINTS; ++i) {
+		sim._curr_joint_angles[i] = data[i];
+	}
+
+	sim._num_of_steps += 1;
+	double ee_pos[6];
+
+
+	// TODO: get pos from kernel
 
 
 	for (int i = 0; i < 3; ++i) {
-		data[i + REACHING_FST_EE_POS_OFFSET] = ee_pos[i];
-		data[i + REACHING_SND_EE_POS_OFFSET] = ee_pos[i];
+		data[REACHING_FST_EE_POS_OFFSET + i] = ee_pos[i];
+		data[REACHING_SND_EE_POS_OFFSET + i] = ee_pos[i];
 	}
 
-	if (dest_pos == 1) {
-		matrix_t* dest = new_matrix(1, 3);
-		double* dest_data = dest->data;
+	for (int i = 0; i < 3; ++i) {
+		data[REACHING_DEST_POS_OFFSET + i] = sim._dest[i];
 	}
+
+	if (sim._num_of_steps >= 50) {
+		data[REACHING_TERMINAL_BIT_OFFSET] = 1;
+	}
+
+	setReachingRewardBit(data);
+	free_matrix(denormed_mat);
+
+	return ret;
 }
 
-matrix_t* resetStatePickNPlace(int rand_angle, int dest_pos, int state_dim, int act_dim);
+
+bool ifObjBecomesAttached(double full_state[FULL_STATE_NUM_COLS]) {
+	double diff = 0;
+
+	for (int i = 0; i < 3; ++i) {
+		double delta = full_state[PNP_EE_POS_OFFSET + i]
+						- full_state[PNP_FST_OBJ_POS_OFFSET + i];
+		diff += delta * delta;
+	}
+
+	return sqrt(diff) <= PNP_OBJ_ATTACHED_RANGE;
+}
 
 
-matrix_t* denormalizeAction(matrix_t* action);
+matrix_t* stepPnP(matrix_t* action, int state_dim, int act_dim) {
+	matrix_t* ret = new_matrix(1, FULL_STATE_NUM_COLS);
+	double* data = ret->data;
 
-matrix_t* step(matrix_t* action, int state_dim, int act_dim);
+	matrix_t* denormed_mat = denormalizeAction(action);
+	denormed_mat->data[3] = action->data[3];
+
+	regulatedJntAngles(sim._curr_joint_angles, denormed_mat->data, data);
+
+	// set the new angle after action is applied
+	for (int i = 0; i < NUM_OF_JOINTS; ++i) {
+		sim._curr_joint_angles[i] = data[i];
+	}
+
+	sim._num_of_steps += 1;
+	double ee_pos[6];
+
+
+	// TODO: get pos from kernel
+
+	for (int i = 0; i < 3; ++i) {
+		data[PNP_EE_POS_OFFSET] = ee_pos[i];
+	}
+
+	// set the state of end-effector
+	data[PNP_EE_STATE_OFFSET] = round(action->data[3]);
+
+	// set the attachment status of the object
+	if (sim._has_obj && data[PNP_EE_STATE_OFFSET == 1]) {
+		for (int i = 0; i < 3; ++i) {
+			sim._obj[i] = data[PNP_EE_POS_OFFSET + i];
+		}
+
+		data[PNP_HAS_OBJ_OFFSET] = 1;
+		sim._ee_state = true;
+	} else if (sim._has_obj && data[PNP_EE_STATE_OFFSET] == 0) {
+		sim._obj[1] = PNP_OBJ_HEIGHT;
+		sim._has_obj = false;
+		data[PNP_HAS_OBJ_OFFSET] = 0;
+	} else if ((!sim._has_obj) && data[PNP_EE_STATE_OFFSET] == 1) {
+		for (int i = 0; i < 3; ++i) {
+			data[PNP_FST_OBJ_POS_OFFSET + i] = sim._obj[i];
+		}
+
+		if (ifObjBecomesAttached(data)) {
+			data[PNP_HAS_OBJ_OFFSET] = 1;
+			
+			for (int i = 0; i < 3; ++i) {
+				sim._obj[i] = data[PNP_EE_POS_OFFSET + i];
+			}
+
+			sim._has_obj = true;
+			data[PNP_HAS_OBJ_OFFSET] = 1;
+		} else {
+			// do nothing
+		}
+		sim._ee_state = true;
+	}
+
+	
+
+
+	return ret;
+}
+
 
 void closeEnv(int state_dim, int act_dim);
+
 
 matrix_t* randomAction(int state_dim, int act_dim);
