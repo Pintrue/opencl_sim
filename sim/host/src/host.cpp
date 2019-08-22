@@ -74,7 +74,7 @@ void cleanup();
 
 
 // Program starts here
-int main(int argc, char** argv) {
+int __main(int argc, char** argv) {
 	cl_int err;
 	
 	if (!initOpencl()) {

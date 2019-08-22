@@ -490,3 +490,8 @@ matrix_t* pnpRandomAction(int state_dim, int act_dim) {
 
 	return ret;
 }
+
+
+int main() {
+	printf("In C API\n");
+}
