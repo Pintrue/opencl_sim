@@ -74,7 +74,11 @@ __kernel void get_pose_by_jnts_int_32(__global const long* restrict trig_vals,
 	long d1 = d6 - d7 + d8;
 
 	// Use base angle to obtain X- and Z-coordinates
-	ee_pose[0] = d1 * trig_vals[3];
-	ee_pose[2] = d1 * trig_vals[0];
-	printf("x = %lu, y = %lu, z = %lu\n", ee_pose[0], ee_pose[1], ee_pose[2]);
+	ee_pose[0] = d1 * trig_vals[3];	// d1 * sin(a1)
+	ee_pose[2] = d1 * trig_vals[0];	// d1 * cos(a1)
+
+	ee_pose[3] = d1;
+	ee_pose[4] = trig_vals[0];
+	ee_pose[5] = trig_vals[3];
+	printf("x = %lu, y = %lu, z = %lu, cos(a1) = %lu, sin(a1) = %lu\n", ee_pose[0], ee_pose[1], ee_pose[2], ee_pose[3], ee_pose[4]);
 }

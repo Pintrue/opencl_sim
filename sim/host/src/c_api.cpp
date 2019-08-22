@@ -15,8 +15,6 @@ using namespace std;
 static Sim sim;
 int _task_flag;
 
-ulong* output_ee_pose;
-
 matrix_t* resetStateReaching(int rand_angle, int dest_pos, int state_dim, int act_dim);
 matrix_t* resetStatePnP(int rand_angle, int dest_pos, int state_dim, int act_dim);
 matrix_t* stepReaching(matrix_t* action, int state_dim, int act_dim);
@@ -142,7 +140,7 @@ matrix_t* resetStateReaching(int rand_angle, int dest_pos, int state_dim, int ac
 	runKM();
 
 	cout << "Result from KM kernel execution" << endl;
-	for (int i = 0; i < 5; ++i) {
+	for (int i = 0; i < 6; ++i) {
 		cout << output_ee_pose[i] << " ";
 	}
 	cout << endl;
