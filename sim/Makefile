@@ -45,9 +45,9 @@ AOCL_LINK_CONFIG := $(shell aocl link-config )
 
 # Compilation flags
 ifeq ($(DEBUG),1)
-CXXFLAGS += -g
+CXXFLAGS += -g -fsanitize=address
 else
-CXXFLAGS += -O2
+CXXFLAGS += 
 endif
 
 # Compiler

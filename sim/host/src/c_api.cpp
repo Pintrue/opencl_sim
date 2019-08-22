@@ -31,7 +31,9 @@ matrix_t* pnpRandomAction(int state_dim, int act_dim);
 
 matrix_t* new_matrix(int rows, int cols) {
 	matrix_t* new_mat = (matrix_t*) malloc(sizeof(matrix_t));
-	
+
+	new_mat->data = (double*) calloc(rows*cols, sizeof(double));	
+
 	new_mat->rows = rows;
 	new_mat->cols = cols;
 	new_mat->max_size = rows * cols;
@@ -93,6 +95,7 @@ matrix_t* resetState(int rand_angle, int dest_pos, int state_dim, int act_dim) {
 
 
 matrix_t* resetStateReaching(int rand_angle, int dest_pos, int state_dim, int act_dim) {
+	printf("in reaching reset\n");
 	matrix_t* ret = new_matrix(1, FULL_STATE_NUM_COLS);
 	double* data = ret->data;
 
@@ -124,12 +127,18 @@ matrix_t* resetStateReaching(int rand_angle, int dest_pos, int state_dim, int ac
 
 
 	// TODO: get pos from kernel
-	initInput(sim._curr_joint_angles);
+	cout << "Before initializing the input to kernel" << endl;
+
+	initInput();
+	cout << "Finish trig. init" << endl;
 	initKMInput();
+
+	cout << "Before entering kernel execution" << endl;
 
 	run();
 	runKM();
 
+	cout << "Finish kernel execution" << endl;
 
 	// set initial arm pose
 	for (int i = 0; i < 3; ++i) {

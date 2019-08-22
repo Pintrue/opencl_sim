@@ -53,11 +53,11 @@ cl_mem output_trig_vals_buf;
 cl_mem output_ee_pose_buf;
 
 // Input data
-uint* input_jnt_angles;
-ulong* output_trig_vals;
+uint* input_jnt_angles;// = new uint[NUMBER_OF_ELEMS];
+ulong* output_trig_vals;// = new ulong[NUMBER_OF_ELEMS];
 
 // long* input_trig_vals;
-ulong* output_ee_pose;
+ulong* output_ee_pose = new ulong[3];
 
 
 // Function prototypes
@@ -205,6 +205,7 @@ bool initOpencl() {
 
 	// - 3. Read the file into the binary
 	if (fread((void*) program_binary, binary_length, 1, file_ptr) == 0) {
+		printf("File does not open\n");
 		delete[] program_binary;
 		fclose(file_ptr);
 		return false;
@@ -255,8 +256,12 @@ bool initOpencl() {
 
 
 void initInput() {
+	printf("Entered initInput()\n");
+
+//	double* test = new double[3];
 	input_jnt_angles = new uint[NUMBER_OF_ELEMS];
 	output_trig_vals = new ulong[NUMBER_OF_ELEMS];
+	printf("new\n");	
 
 	// Randomize the input elements
 	double ja_0, ja_1, ja_2;		// cosine angle radians
@@ -296,7 +301,9 @@ void initInput() {
 	// 	printf("ja[%d] = %u\n", i, input_jnt_angles[i]);
 	// }
 	// TODO: verification output
+	printf("Finish init\n");
 }
+
 
 void initInput(double jnt_angles[3]) {
 	input_jnt_angles = new uint[NUMBER_OF_ELEMS];
@@ -327,26 +334,30 @@ void initInput(double jnt_angles[3]) {
 
 void initKMInput() {
 	// input_trig_vals = new long[NUMBER_OF_ELEMS];
-	output_ee_pose = new ulong[3];
+	//output_ee_pose = new ulong[3];
 }
 
 
 void run() {
+	printf("Entered run()\n");
 	cl_int err;
 
 	// clock_t begin = clock();
 	struct timespec begin, end;
+	printf("Start timing\n");
 	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &begin);
 
 	cl_event kernel_event;
 	cl_event finish_event;
 
+	printf("Enqueue writes to input buffers\n");
 	// Enqueue write commands to the input buffer
 	cl_event write_events[1];
 	err = clEnqueueWriteBuffer(command_queue, input_jnt_angles_buf, CL_FALSE,
 			0, NUMBER_OF_ELEMS * sizeof(uint), input_jnt_angles, 0, NULL, &write_events[0]);
 	checkStatus(err, __FILE__, __LINE__, "'clEnqueueWriteBuffer()' for 'input_jnt_angles_buf' failed");
 
+	printf("Setting kernel argument\n");
 	// Set kernel argument
 	unsigned argi = 0;
 
@@ -358,6 +369,7 @@ void run() {
 			&output_trig_vals_buf);
 	checkStatus(err, __FILE__, __LINE__, "'clSetKernelArg()' failed");
 
+	printf("Launching the kernel\n");
 	// Launch the kernel
 	const size_t global_work_size = NUMBER_OF_ELEMS;
 	err = clEnqueueNDRangeKernel(command_queue, kernel, 1, NULL,
@@ -387,6 +399,7 @@ void run() {
 	// Release all events
 	clReleaseEvent(kernel_event);
 	clReleaseEvent(finish_event);
+	printf("Finish kernel run()\n");
 }
 
 
