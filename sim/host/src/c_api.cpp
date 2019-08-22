@@ -14,6 +14,8 @@ using namespace std;
 
 static Sim sim;
 int _task_flag;
+double link_length[3] = {sqrt(3.5*3.5+3.9*3.9), sqrt(1.7*1.7+10.5*10.5), sqrt(3.5*3.5+16.5*16.5)};
+
 
 matrix_t* resetStateReaching(int rand_angle, int dest_pos, int state_dim, int act_dim);
 matrix_t* resetStatePnP(int rand_angle, int dest_pos, int state_dim, int act_dim);
@@ -28,6 +30,7 @@ bool withinCylinder(double center[3], int radius, double obj[3]);
 matrix_t* normalizeAction(matrix_t* action);
 matrix_t* reachingRandomAction(int state_dim, int act_dim);
 matrix_t* pnpRandomAction(int state_dim, int act_dim);
+void revertPose(const ulong ee_pose_int[6], double ee_pose[3]);
 
 
 matrix_t* new_matrix(int rows, int cols) {
@@ -146,6 +149,8 @@ matrix_t* resetStateReaching(int rand_angle, int dest_pos, int state_dim, int ac
 	cout << endl;
 
 	cout << "Finish kernel execution" << endl;
+
+	revertPose(output_ee_pose, ee_pos);
 
 	// set initial arm pose
 	for (int i = 0; i < 3; ++i) {
@@ -524,6 +529,22 @@ matrix_t* pnpRandomAction(int state_dim, int act_dim) {
 	free_matrix(ja_action);
 
 	return ret;
+}
+
+
+void revertPose(const ulong ee_pose_int[6], double ee_pose[3]) {
+	double m = INT_TRIG_SCALE_RANGE / 2.0;
+	double b = INT_TRIG_SCALE_RANGE / 2.0;
+
+	double d1 = (ulong_ee_pose_int[3] / 100.0
+				- (link_length[3] - link_length[2] + link_length[1]) * b) / m;
+
+	ee_pose[2] = d1 * convertTrigEncToVal(ee_pose_int[4]);
+	ee_pose[0] = d1 * convertTrigEncToVal(ee_pose_int[5]);
+	
+	ee_pose[1] = ee_pose_int[1] / 100.0 - 2.9;
+	ee_pose[1] -= (link_length[1] + link_length[2] + link_length[3]) * b;
+	ee_pose[1] = ee_pose[1] / m + 2.9;
 }
 
 
