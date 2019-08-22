@@ -39,24 +39,24 @@ using namespace std;
 
 
 // // Runtime config
-// cl_platform_id platform = NULL;
-// cl_device_id device;
-// cl_context context = NULL;
-// cl_command_queue command_queue;
-// cl_program program = NULL;
-// cl_kernel kernel;
-// cl_kernel km_kernel;
+cl_platform_id platform = NULL;
+cl_device_id device;
+cl_context context = NULL;
+cl_command_queue command_queue;
+cl_program program = NULL;
+cl_kernel kernel;
+cl_kernel km_kernel;
 
-// cl_mem input_jnt_angles_buf;
-// cl_mem output_trig_vals_buf;
-// // cl_mem input_trig_vals_buf;
-// cl_mem output_ee_pose_buf;
+cl_mem input_jnt_angles_buf;
+cl_mem output_trig_vals_buf;
+// cl_mem input_trig_vals_buf;
+cl_mem output_ee_pose_buf;
 
-// // Input data
-// uint* input_jnt_angles;// = new uint[NUMBER_OF_ELEMS];
-// ulong* output_trig_vals;// = new ulong[NUMBER_OF_ELEMS];
+// Input data
+uint* input_jnt_angles;// = new uint[NUMBER_OF_ELEMS];
+ulong* output_trig_vals;// = new ulong[NUMBER_OF_ELEMS];
 
-// // long* input_trig_vals;
+// long* input_trig_vals;
 // ulong* output_ee_pose;
 
 
