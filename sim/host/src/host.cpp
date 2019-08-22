@@ -66,6 +66,7 @@ uint convertRadsToInt(double radians);
 double convertTrigEncToVal(long enc);
 bool initOpencl();
 void initInput();
+void initInput(double jnt_angles[3]);
 void initKMInput();
 void run();
 void runKM();
@@ -289,6 +290,32 @@ void initInput() {
 	// 	printf("ja[%d] = %u\n", i, input_jnt_angles[i]);
 	// }
 	// TODO: verification output
+}
+
+void initInput(double jnt_angles[3]) {
+	input_jnt_angles = new uint[NUMBER_OF_ELEMS];
+	output_trig_vals = new ulong[NUMBER_OF_ELEMS];
+
+	uint delta_ja_int[3] = {convertRadsToInt(jnt_angles[0]), convertRadsToInt(jnt_angles[1]), convertRadsToInt(jnt_angles[2])};
+	// _ja_0 = -0.502065;
+	// _ja_1 = -0.675970;
+	// _ja_2 = -1.911503;
+	
+	// printf("Before conversion:\n");
+	// printf("ja[0] = %lf\n", ja_0);
+	// printf("ja[1] = %lf\n", ja_1);
+	// printf("ja[2] = %lf\n", ja_2);
+	// printf("ja[3] = %lf\n", _ja_0);
+	// printf("ja[4] = %lf\n", _ja_1);
+	// printf("ja[5] = %lf\n", _ja_2);
+
+	// Convert radians to corresponding integer encoding
+	input_jnt_angles[0] = delta_ja_int[0];
+	input_jnt_angles[1] = 112855247 + delta_ja_int[1];
+	input_jnt_angles[2] = 7877904265 - delta_ja_int[2] - delta_ja_int[1];
+	input_jnt_angles[3] = -1104420162 + delta_ja_int[0];
+	input_jnt_angles[4] = -991564915 + delta_ja_int[1];
+	input_jnt_angles[5] = 6773484103 - delta_ja_int[2] - delta_ja_int[1];
 }
 
 

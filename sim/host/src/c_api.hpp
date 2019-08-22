@@ -72,6 +72,8 @@ typedef struct _matrix_t {
 #define PNP_WORKSPACE_Z_UPPER 19.5
 #define PNP_OBJ_AT_DEST_RANGE 3.0
 #define PNP_OBJ_ATTACHED_RANGE 1.0
+#define PNP_OBJ_LIFT_UP_CYLINDER_RADIUS 3.0 // the cylinder within which the object can be lifted up
+#define PNP_OBJ_AFLOAT_MIN_HEIGHT 1.5
 
 #define ACTION_BOUND_LOWER -0.0872664626
 #define ACTION_BOUND_UPPER 0.0872664626

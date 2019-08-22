@@ -9,7 +9,7 @@ class Sim {
     public:
         // Constructors
         Sim();
-        Sim(double origin[3]);
+        // Sim(double origin[3]);
 
         // Simulation status
         int _num_of_steps;      // # of times sim has been forwarded

@@ -22,6 +22,10 @@ void setPnPRewardBit(double full_state[FULL_STATE_NUM_COLS]);
 bool regulatedJntAngles(const double curr_jnt_angles[NUM_OF_JOINTS],
 						const double delta[ACTION_DIM],
 						double new_state[FULL_STATE_NUM_COLS]);
+bool withinCylinder(double center[3], int radius, double obj[3]);
+matrix_t* normalizeAction(matrix_t* action);
+matrix_t* reachingRandomAction(int state_dim, int act_dim);
+matrix_t* pnpRandomAction(int state_dim, int act_dim);
 
 
 matrix_t* new_matrix(int rows, int cols) {
@@ -99,7 +103,7 @@ matrix_t* resetStateReaching(int rand_angle, int dest_pos, int state_dim, int ac
 	}
 
 
-	double ee_pos[6];
+	double ee_pos[3];
 
 	for (int i = 0; i < NUM_OF_JOINTS; ++i) {
 		sim._init_joint_angles[i] = data[i];
@@ -154,7 +158,7 @@ matrix_t* resetStatePnP(int rand_angle, int dest_pos, int state_dim, int act_dim
 		}
 	}
 
-	double ee_pos[6];
+	double ee_pos[3];
 
 	for (int i = 0; i < 3; ++i) {
 		sim._init_joint_angles[i] = data[i];
@@ -301,7 +305,7 @@ matrix_t* stepReaching(matrix_t* action, int state_dim, int act_dim) {
 	}
 
 	sim._num_of_steps += 1;
-	double ee_pos[6];
+	double ee_pos[3];
 
 
 	// TODO: get pos from kernel
@@ -340,6 +344,13 @@ bool ifObjBecomesAttached(double full_state[FULL_STATE_NUM_COLS]) {
 }
 
 
+bool withinCylinder(double center[3], int radius, double obj[3]) {
+	double distToCenter = sqrt(pow(center[0] - obj[2], 2)
+							+ pow(center[2] - obj[2], 2));
+	return distToCenter <= (double) radius;
+}
+
+
 matrix_t* stepPnP(matrix_t* action, int state_dim, int act_dim) {
 	matrix_t* ret = new_matrix(1, FULL_STATE_NUM_COLS);
 	double* data = ret->data;
@@ -355,7 +366,7 @@ matrix_t* stepPnP(matrix_t* action, int state_dim, int act_dim) {
 	}
 
 	sim._num_of_steps += 1;
-	double ee_pos[6];
+	double ee_pos[3];
 
 
 	// TODO: get pos from kernel
@@ -399,14 +410,83 @@ matrix_t* stepPnP(matrix_t* action, int state_dim, int act_dim) {
 		sim._ee_state = true;
 	}
 
-	
+	if (!withinCylinder(sim._init_obj, PNP_OBJ_LIFT_UP_CYLINDER_RADIUS, ee_pos)
+		&& (!withinCylinder(sim._dest, PNP_OBJ_LIFT_UP_CYLINDER_RADIUS, ee_pos))
+		&& ee_pos[1] < PNP_OBJ_AFLOAT_MIN_HEIGHT) {
+		
+		sim._obj[1] = PNP_OBJ_HEIGHT;
+		data[PNP_HAS_OBJ_OFFSET] = 0;
+		sim._has_obj = false;
+	}
 
+	// set obj pos
+	for (int i = 0; i < 3; ++i) {
+		data[PNP_FST_OBJ_POS_OFFSET + i] = sim._obj[i];
+		data[PNP_SND_OBJ_POS_OFFSET + i] = sim._obj[i];
+	}
+
+	for (int i = 0; i < 3; ++i) {
+		data[PNP_DEST_POS_OFFSET + i] = sim._dest[i];
+	}
+
+	if (sim._num_of_steps >= 50) {
+		data[PNP_TERMINAL_BIT_OFFSET] = 1;
+	}
+
+	setPnPRewardBit(data);
+	free_matrix(denormed_mat);
 
 	return ret;
 }
 
 
-void closeEnv(int state_dim, int act_dim);
+void closeEnv(int state_dim, int act_dim) {
+	return;	
+}
 
 
-matrix_t* randomAction(int state_dim, int act_dim);
+matrix_t* normalizeAction(matrix_t* action) {
+	matrix_t* ret = new_matrix(action->rows, action->cols);
+
+	ret->data[0] = (double) (action->data[0] - JNT0_L) / (JNT0_U - JNT0_L) * 2 - 1;
+	ret->data[1] = (double) (action->data[1] - JNT1_L) / (JNT1_U - JNT1_L) * 2 - 1;
+	ret->data[2] = (double) (action->data[2] - JNT2_L) / (JNT2_U - JNT2_L) * 2 - 1;
+
+	return ret;
+}
+
+
+matrix_t* reachingRandomAction(int state_dim, int act_dim) {
+	matrix_t* ret = new_matrix(1, act_dim);
+	double* data = ret->data;
+
+	double to_ja[3];
+	to_ja[0] = randUniform(JNT0_L, JNT0_U);
+	to_ja[1] = randUniform(JNT1_L, JNT1_U);
+	to_ja[2] = randUniform(JNT2_L, JNT2_U);
+
+	for (int i = 0; i < NUM_OF_JOINTS; ++i) {
+		data[i] = to_ja[i] - sim._curr_joint_angles[i];
+	}
+
+	matrix_t* norm_ret = normalizeAction(ret);
+	free_matrix(ret);
+
+	return norm_ret;
+}
+
+
+matrix_t* pnpRandomAction(int state_dim, int act_dim) {
+	matrix_t* ret = new_matrix(1, act_dim);
+	double* data = ret->data;
+
+	matrix_t* ja_action = reachingRandomAction(0, act_dim - 1);
+	for (int i = 0; i < act_dim - 1; ++i) {
+		data[i] = ja_action->data[i];
+	}
+
+	data[3] = (sim._ee_state) ? 1 : 0;
+	free_matrix(ja_action);
+
+	return ret;
+}
