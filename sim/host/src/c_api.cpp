@@ -6,6 +6,7 @@
 #include "c_api.hpp"
 #include "host.hpp"
 #include "sim.hpp"
+#include "CL/opencl.h"
 
 
 using namespace std;
@@ -13,6 +14,8 @@ using namespace std;
 
 static Sim sim;
 int _task_flag;
+
+ulong* output_ee_pose;
 
 matrix_t* resetStateReaching(int rand_angle, int dest_pos, int state_dim, int act_dim);
 matrix_t* resetStatePnP(int rand_angle, int dest_pos, int state_dim, int act_dim);

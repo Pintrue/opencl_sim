@@ -57,7 +57,7 @@ uint* input_jnt_angles;// = new uint[NUMBER_OF_ELEMS];
 ulong* output_trig_vals;// = new ulong[NUMBER_OF_ELEMS];
 
 // long* input_trig_vals;
-// ulong* output_ee_pose;
+ulong* output_ee_pose;
 
 
 // Function prototypes
