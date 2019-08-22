@@ -87,7 +87,8 @@ int main(int argc, char** argv) {
 		// _ja_0 = -0.502065;
 		// _ja_1 = -0.675970;
 		// _ja_2 = -1.911503;
-		double _jas[3] = {-0.502065, -0.675970, -1.911503};
+
+		double _jas[3] = {1.068731, 0.894826, -0.340707};
 		initInput(_jas);
 		initKMInput();
 
