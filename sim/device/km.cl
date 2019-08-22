@@ -51,7 +51,7 @@ __kernel void cosine_int_32(__global const uint* restrict jnt_angles,
 
 __kernel void get_pose_by_jnts_int_32(__global const long* restrict trig_vals,
 										__global ulong* restrict ee_pose) {
-	__local long link_lengths[4];
+	// __local long link_lengths[4];
 
 	// Link lengths in integer-encoding
 	// 290 = 290;	// base height

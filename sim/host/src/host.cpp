@@ -57,7 +57,7 @@ uint* input_jnt_angles;// = new uint[NUMBER_OF_ELEMS];
 ulong* output_trig_vals;// = new ulong[NUMBER_OF_ELEMS];
 
 // long* input_trig_vals;
-ulong* output_ee_pose = new ulong[3];
+ulong* output_ee_pose;
 
 
 // Function prototypes
@@ -247,7 +247,7 @@ bool initOpencl() {
 	output_trig_vals_buf = clCreateBuffer(context, CL_MEM_WRITE_ONLY, NUMBER_OF_ELEMS * sizeof(ulong), NULL, &err);
 	checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'output_trig_vals_buf' failed");
 
-	output_ee_pose_buf = clCreateBuffer(context, CL_MEM_WRITE_ONLY, 3 * sizeof(ulong), NULL, &err);
+	output_ee_pose_buf = clCreateBuffer(context, CL_MEM_WRITE_ONLY, 5 * sizeof(ulong), NULL, &err);
 	checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'output_ee_pose_buf' failed");
 
 	printf("FINISH INIT.\n");
@@ -334,7 +334,7 @@ void initInput(double jnt_angles[3]) {
 
 void initKMInput() {
 	// input_trig_vals = new long[NUMBER_OF_ELEMS];
-	//output_ee_pose = new ulong[3];
+	output_ee_pose = new ulong[5];
 }
 
 
@@ -442,7 +442,7 @@ void runKM() {
 
 	// Enqueue read commands on the output buffer
 	err = clEnqueueReadBuffer(command_queue, output_ee_pose_buf, CL_FALSE, 0,
-			3 * sizeof(ulong), output_ee_pose, 1, &kernel_event,
+			5 * sizeof(ulong), output_ee_pose, 1, &kernel_event,
 			&finish_event);
 	checkStatus(err, __FILE__, __LINE__, "'clEnqueueReadBuffer()' failed");
 

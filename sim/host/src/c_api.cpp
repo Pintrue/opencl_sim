@@ -138,6 +138,12 @@ matrix_t* resetStateReaching(int rand_angle, int dest_pos, int state_dim, int ac
 	run();
 	runKM();
 
+	cout << "Result from KM kernel execution" << endl;
+	for (int i = 0; i < 5; ++i) {
+		cout << output_ee_pose[i] << " ";
+	}
+	cout << endl;
+
 	cout << "Finish kernel execution" << endl;
 
 	// set initial arm pose

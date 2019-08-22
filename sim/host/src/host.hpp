@@ -12,7 +12,7 @@ void initInput();
 void initInput(double jnt_angles[3]);
 void initKMInput();
 void run();
-void runKM();
+void runKM(double ee_pos[3]);
 void cleanup();
 
 #endif
