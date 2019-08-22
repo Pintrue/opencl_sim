@@ -5,6 +5,7 @@
 #include <ctime>
 #include <time.h>
 #include "CL/opencl.h"
+#include "host.hpp"
 
 
 #define MAX_32_BITS 4294967295
