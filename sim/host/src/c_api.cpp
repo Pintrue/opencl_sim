@@ -516,8 +516,8 @@ int main() {
 	matrix_t* fs = resetState(0, 0, 0, 0);
 
 	double* data = fs->data;
-	for (int i = 0; i < fs.rows; ++i) {
-		for (int j = 0; j < fs.cols; ++j) {
+	for (int i = 0; i < fs->rows; ++i) {
+		for (int j = 0; j < fs->cols; ++j) {
 			cout << *(data + i * fs->cols + j) << " ";
 		}
 	}
