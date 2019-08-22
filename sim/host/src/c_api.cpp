@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <math.h>
 #include "c_api.hpp"
+#include "host.hpp"
 #include "sim.hpp"
 
 
@@ -63,6 +64,8 @@ int initEnv(int act_dim, int task_flag) {
 	}
 
 	_task_flag = task_flag;
+
+	initOpenCL();
 	return 0;
 }
 
@@ -441,6 +444,8 @@ matrix_t* stepPnP(matrix_t* action, int state_dim, int act_dim) {
 
 
 void closeEnv(int state_dim, int act_dim) {
+	cleanup();
+
 	return;	
 }
 
@@ -492,6 +497,6 @@ matrix_t* pnpRandomAction(int state_dim, int act_dim) {
 }
 
 
-int main() {
-	printf("In C API\n");
+int __main() {
+	
 }

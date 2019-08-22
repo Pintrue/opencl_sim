@@ -60,21 +60,21 @@ ulong* output_ee_pose;
 
 
 // Function prototypes
-void checkStatus(cl_int status, const char* file, int line, const char* msg);
-double randAngleRads(double lower, double upper);
-uint convertRadsToInt(double radians);
-double convertTrigEncToVal(long enc);
-bool initOpencl();
-void initInput();
-void initInput(double jnt_angles[3]);
-void initKMInput();
-void run();
-void runKM();
-void cleanup();
+// void checkStatus(cl_int status, const char* file, int line, const char* msg);
+// double randAngleRads(double lower, double upper);
+// uint convertRadsToInt(double radians);
+// double convertTrigEncToVal(long enc);
+// bool initOpencl();
+// void initInput();
+// void initInput(double jnt_angles[3]);
+// void initKMInput();
+// void run();
+// void runKM();
+// void cleanup();
 
 
 // Program starts here
-int __main(int argc, char** argv) {
+int main(int argc, char** argv) {
 	cl_int err;
 	
 	if (!initOpencl()) {
@@ -83,7 +83,11 @@ int __main(int argc, char** argv) {
 	}
 
 	while (1) {
-		initInput();
+		// _ja_0 = -0.502065;
+		// _ja_1 = -0.675970;
+		// _ja_2 = -1.911503;
+		double _jas[3] = {-0.502065, -0.675970, -1.911503};
+		initInput(_jas);
 		initKMInput();
 
 		printf("\nKernel initialization is complete.\n");
