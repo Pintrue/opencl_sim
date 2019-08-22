@@ -75,56 +75,56 @@ using namespace std;
 
 
 // Program starts here
-int __main(int argc, char** argv) {
-	cl_int err;
+// int __main(int argc, char** argv) {
+// 	cl_int err;
 	
-	if (!initOpencl()) {
-		printf("ERROR: Unable to initialize OpenCL at %s: line %d.\n", __FILE__, __LINE__);
-		return -1;
-	}
+// 	if (!initOpencl()) {
+// 		printf("ERROR: Unable to initialize OpenCL at %s: line %d.\n", __FILE__, __LINE__);
+// 		return -1;
+// 	}
 
-	while (1) {
-		// _ja_0 = -0.502065;
-		// _ja_1 = -0.675970;
-		// _ja_2 = -1.911503;
+// 	while (1) {
+// 		// _ja_0 = -0.502065;
+// 		// _ja_1 = -0.675970;
+// 		// _ja_2 = -1.911503;
 
-		double _jas[3] = {1.068731, 0.894826, -0.340707};
-		initInput(_jas);
-		initKMInput();
+// 		double _jas[3] = {1.068731, 0.894826, -0.340707};
+// 		initInput(_jas);
+// 		initKMInput();
 
-		printf("\nKernel initialization is complete.\n");
-		printf("Launching the kernel...\n\n");
+// 		printf("\nKernel initialization is complete.\n");
+// 		printf("Launching the kernel...\n\n");
 
-		run();
+// 		run();
 
-		printf("Output from kernel 1:\n");
-		printf("------------------------\n");
-		for (int i = 0; i < NUMBER_OF_ELEMS; ++i) {
-			// printf("In radians: %u\n", input_jnt_angles[i]);
-			printf("In encoding: %d: %lu\n", i, output_trig_vals[i]);
-			// printf("Converted back: %lf\n", convertTrigEncToVal(output_trig_vals[i]));
-			printf("-----------------------------\n");
-		}
+// 		printf("Output from kernel 1:\n");
+// 		printf("------------------------\n");
+// 		for (int i = 0; i < NUMBER_OF_ELEMS; ++i) {
+// 			// printf("In radians: %u\n", input_jnt_angles[i]);
+// 			printf("In encoding: %d: %lu\n", i, output_trig_vals[i]);
+// 			// printf("Converted back: %lf\n", convertTrigEncToVal(output_trig_vals[i]));
+// 			printf("-----------------------------\n");
+// 		}
 
-		runKM();
+// 		runKM();
 
-		printf("\nOutput from kernel 2:\n");
-		printf("X = %lu\n", output_ee_pose[0]);
-		printf("Y = %lu\n", output_ee_pose[1]);
-		printf("Z = %lu\n", output_ee_pose[2]);
+// 		printf("\nOutput from kernel 2:\n");
+// 		printf("X = %lu\n", output_ee_pose[0]);
+// 		printf("Y = %lu\n", output_ee_pose[1]);
+// 		printf("Z = %lu\n", output_ee_pose[2]);
 
-		printf("\nTo continue, please enter any key.\n");
-		char c;
-		scanf("%c", &c);
-		printf("\n");
-	}
+// 		printf("\nTo continue, please enter any key.\n");
+// 		char c;
+// 		scanf("%c", &c);
+// 		printf("\n");
+// 	}
 
-	printf("Kernel execution complete.\n");
+// 	printf("Kernel execution complete.\n");
 
-	cleanup();
+// 	cleanup();
 
-	return 0;
-}
+// 	return 0;
+// }
 
 
 void checkStatus(cl_int status,
