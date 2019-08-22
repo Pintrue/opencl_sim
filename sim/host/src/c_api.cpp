@@ -523,5 +523,5 @@ int main() {
 	}
 	cout << endl;
 
-	closeEnv();
+	closeEnv(0, 0);
 }
