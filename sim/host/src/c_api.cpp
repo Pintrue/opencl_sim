@@ -65,7 +65,12 @@ int initEnv(int act_dim, int task_flag) {
 
 	_task_flag = task_flag;
 
-	initOpencl();
+	cl_int err;
+	if (!initOpencl()) {
+		printf("ERROR: Unable to initialize OpenCL at %s: line %d.\n", __FILE__, __LINE__);
+		return -1;
+	}
+
 	return 0;
 }
 
@@ -100,9 +105,13 @@ matrix_t* resetStateReaching(int rand_angle, int dest_pos, int state_dim, int ac
 		data[1] = randUniform(JNT1_L, JNT1_U);
 		data[2] = randUniform(JNT2_L, JNT2_U);
 	} else {
-		for (int i = 0; i < NUM_OF_JOINTS; ++i) {
-			data[i] = 0;
-		}
+		// for (int i = 0; i < NUM_OF_JOINTS; ++i) {
+		// 	data[i] = 0;
+		// }
+		
+		data[0] = -0.502065;
+		data[1] = -0.675970;
+		data[2] = -1.911503;
 	}
 
 
@@ -115,6 +124,11 @@ matrix_t* resetStateReaching(int rand_angle, int dest_pos, int state_dim, int ac
 
 
 	// TODO: get pos from kernel
+	initInput(sim._curr_joint_angles);
+	initKMInput();
+
+	run();
+	runKM();
 
 
 	// set initial arm pose
@@ -497,6 +511,17 @@ matrix_t* pnpRandomAction(int state_dim, int act_dim) {
 }
 
 
-int __main() {
-	
+int main() {
+	initEnv(ACTION_DIM, REACHING_TASK_FLAG);
+	matrix_t* fs = resetState(0, 0, 0, 0);
+
+	double* data = fs->data;
+	for (int i = 0; i < fs.rows; ++i) {
+		for (int j = 0; j < fs.cols; ++j) {
+			cout << *(data + i * fs->cols + j) << " ";
+		}
+	}
+	cout << endl;
+
+	closeEnv();
 }
