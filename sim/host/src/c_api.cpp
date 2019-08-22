@@ -535,15 +535,19 @@ matrix_t* pnpRandomAction(int state_dim, int act_dim) {
 void revertPose(const ulong ee_pose_int[6], double ee_pose[3]) {
 	double m = INT_TRIG_SCALE_RANGE / 2.0;
 	double b = INT_TRIG_SCALE_RANGE / 2.0;
-
+	
+	cout << "m = " << m << ", b = " << b << endl;
+	cout << "_d1 = " << ee_pose_int[3] << endl;
 	double d1 = (ee_pose_int[3] / 100.0
-				- (link_length[3] - link_length[2] + link_length[1]) * b) / m;
+				- (link_length[2] - link_length[1] + link_length[0]) * b) / m;
+
+	cout << "d1 = " << d1 << endl;
 
 	ee_pose[2] = d1 * convertTrigEncToVal(ee_pose_int[4]);
 	ee_pose[0] = d1 * convertTrigEncToVal(ee_pose_int[5]);
 	
 	ee_pose[1] = ee_pose_int[1] / 100.0 - 2.9;
-	ee_pose[1] -= (link_length[1] + link_length[2] + link_length[3]) * b;
+	ee_pose[1] -= (link_length[0] + link_length[1] + link_length[2]) * b;
 	ee_pose[1] = ee_pose[1] / m + 2.9;
 }
 
