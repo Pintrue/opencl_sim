@@ -65,7 +65,7 @@ int initEnv(int act_dim, int task_flag) {
 
 	_task_flag = task_flag;
 
-	initOpenCL();
+	initOpencl();
 	return 0;
 }
 
