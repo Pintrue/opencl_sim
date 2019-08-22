@@ -536,7 +536,7 @@ void revertPose(const ulong ee_pose_int[6], double ee_pose[3]) {
 	double m = INT_TRIG_SCALE_RANGE / 2.0;
 	double b = INT_TRIG_SCALE_RANGE / 2.0;
 
-	double d1 = (ulong_ee_pose_int[3] / 100.0
+	double d1 = (ee_pose_int[3] / 100.0
 				- (link_length[3] - link_length[2] + link_length[1]) * b) / m;
 
 	ee_pose[2] = d1 * convertTrigEncToVal(ee_pose_int[4]);
