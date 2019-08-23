@@ -1,1 +1,0 @@
-Compiler Command: aoc -march=emulator device/km.cl -o bin/km.aocx --board a10gx
