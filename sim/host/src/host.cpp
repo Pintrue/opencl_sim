@@ -157,9 +157,9 @@ bool initOpencl() {
 	size_t value_size;
 	char* value;
 	for (int i = 0; i < 5; ++i) {
-		clGetDeviceInfo(devices[i], CL_DEVICE_NAME, 0, NULL, &value_siz$
+		clGetDeviceInfo(devices[i], CL_DEVICE_NAME, 0, NULL, &value_size);
 		value = (char*) malloc(value_size);
-		clGetDeviceInfo(devices[i], CL_DEVICE_NAME, value_size, value, $
+		clGetDeviceInfo(devices[i], CL_DEVICE_NAME, value_size, value, NULL);
 		printf("%d. Device: %s\n", i + 1, value);
 		free(value);
 	}
