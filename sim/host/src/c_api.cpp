@@ -139,7 +139,6 @@ matrix_t* resetStateReaching(int rand_angle, int dest_pos, int state_dim, int ac
 	runKM();
 	runFPKM();
 
-	cout << "Finish kernel execution" << endl;
 	revertPose(output_ee_pose, ee_pos);
 
 	cout << "Result from KM kernel execution" << endl;
