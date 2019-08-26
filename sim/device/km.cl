@@ -101,7 +101,12 @@ __kernel void get_pose_by_jnts(__global const double* restrict radians),
 	
 	double8 trig_vals_vec = cos(radians_vec);
 	printf("Output from floating-point version\n");
-	for (int i = 0; i < 6; ++i) {
-		printf("trig_vals_vec[%d] = %lf\n", i, trig_vals_vec[i]);
-	}
+
+	printf("trig_vals_vec[0] = %lf\n", trig_vals_vec.s0);
+	printf("trig_vals_vec[1] = %lf\n", trig_vals_vec.s1);
+	printf("trig_vals_vec[2] = %lf\n", trig_vals_vec.s2);
+	printf("trig_vals_vec[3] = %lf\n", trig_vals_vec.s3);
+	printf("trig_vals_vec[4] = %lf\n", trig_vals_vec.s4);
+	printf("trig_vals_vec[5] = %lf\n", trig_vals_vec.s5);
+
 }
