@@ -93,7 +93,7 @@ __kernel void get_pose_by_jnts_int_32(__global const long* restrict trig_vals,
 }
 
 
-__kernel void get_pose_by_jnts(__global const double* restrict radians),
+__kernel void get_pose_by_jnts(__global const double* restrict radians,
 								__global double* restrict ee_pose) {
 	double8 radians_vec = (double8) (radians[0], radians[1], radians[2],
 									radians[3], radians[4], radians[5],
