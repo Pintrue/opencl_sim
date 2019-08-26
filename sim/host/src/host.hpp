@@ -44,6 +44,7 @@ void initInput(double jnt_angles[3]);
 void initKMInput();
 void run();
 void runKM();
+void runFPKM();
 void cleanup();
 
 #endif
