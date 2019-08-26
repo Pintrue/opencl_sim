@@ -95,29 +95,40 @@ __kernel void get_pose_by_jnts_int_32(__global const long* restrict trig_vals,
 
 __kernel void get_pose_by_jnts(__global const double* restrict radians,
 								__global double* restrict ee_pose) {
-	#ifdef vec
-	printf("Y\n");
-	double8 radians_vec = (double8) (radians[0], radians[1], radians[2],
-									radians[3], radians[4], radians[5],
-									0.0, 0.0); 
+	// #ifdef vec
+	// printf("Y\n");
+	// double8 radians_vec = (double8) (radians[0], radians[1], radians[2],
+	// 								radians[3], radians[4], radians[5],
+	// 								0.0, 0.0); 
 	
-	double8 trig_vals_vec = cos(radians_vec);
-	// printf("Output from floating-point version\n");
+	// double8 trig_vals_vec = cos(radians_vec);
+	// // printf("Output from floating-point version\n");
 
-	// printf("trig_vals_vec[0] = %lf\n", trig_vals_vec.s0);
-	// printf("trig_vals_vec[1] = %lf\n", trig_vals_vec.s1);
-	// printf("trig_vals_vec[2] = %lf\n", trig_vals_vec.s2);
-	// printf("trig_vals_vec[3] = %lf\n", trig_vals_vec.s3);
-	// printf("trig_vals_vec[4] = %lf\n", trig_vals_vec.s4);
-	// printf("trig_vals_vec[5] = %lf\n", trig_vals_vec.s5);
+	// // printf("trig_vals_vec[0] = %lf\n", trig_vals_vec.s0);
+	// // printf("trig_vals_vec[1] = %lf\n", trig_vals_vec.s1);
+	// // printf("trig_vals_vec[2] = %lf\n", trig_vals_vec.s2);
+	// // printf("trig_vals_vec[3] = %lf\n", trig_vals_vec.s3);
+	// // printf("trig_vals_vec[4] = %lf\n", trig_vals_vec.s4);
+	// // printf("trig_vals_vec[5] = %lf\n", trig_vals_vec.s5);
 
-	#else
-	printf("N\n");
+	// #else
+	// printf("N\n");
+	double init_jnt_angles[2] = {atan2(1.7, 10.5), atan2(3.5, 16.5)};
+
+	double inter_angles[4];
+
+	double a2 = atan2(3.5, 3.9);
+	inter_angles[0] = radians[0];
+	inter_angles[1] = atan2(3.5, 3.90);
+	inter_angles[2] = atan2(1.7, 10.50) + radians[1];
+	inter_angles[3] = atan2(3.5, 16.50) - radians[2] - radians[1];
+
 	double trig_vals[6];
 
 	#pragma unroll 6
 	for (int i = 0; i < 6; ++i) {
 		trig_vals[i] = cos(radians[i]);
 	}
-	#endif
+
+
 }
