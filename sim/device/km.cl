@@ -5,37 +5,37 @@ __kernel void cosine_int_32(__global const uint* restrict jnt_angles,
 	__local long intercept_table_32[4095];
 
 	// init the LUT of integer-encoded cosine function
-	#pragma unroll
+	#pragma unroll 16
 	for (unsigned i = 0; i < 351; ++i) {
 		grad_table_32[i] = -1;
 		intercept_table_32[i] = 287708254;
 	}
 
-	#pragma unroll
+	#pragma unroll 16
 	for (unsigned i = 351; i < 819; ++i) {
 		grad_table_32[i] = 1;
 		intercept_table_32[i] = -368140054;
 	}
 
-	#pragma unroll
+	#pragma unroll 16
 	for (unsigned i = 819; i < 1872; ++i) {
 		grad_table_32[i] = 3;
 		intercept_table_32[i] = -2262381335;
 	}
 
-	#pragma unroll
+	#pragma unroll 16
 	for (unsigned i = 1872; i < 2457; ++i) {
 		grad_table_32[i] = 1;
 		intercept_table_32[i] = 1717986918;
 	}
 
-	#pragma unroll
+	#pragma unroll 16
 	for (unsigned i = 2457; i < 3042; ++i) {
 		grad_table_32[i] = -1;
 		intercept_table_32[i] = 6871947672;
 	}
 
-	#pragma unroll
+	#pragma unroll 16
 	for (unsigned i = 3042; i < 4096; ++i) {
 		grad_table_32[i] = -3;
 		intercept_table_32[i] = 13099500927;
