@@ -259,7 +259,7 @@ bool initOpencl() {
 	output_ee_pose_buf = clCreateBuffer(context, CL_MEM_WRITE_ONLY, 6 * sizeof(ulong), NULL, &err);
 	checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'output_ee_pose_buf' failed");
 
-	output_fp_ee_pose_buf = clCreateBUffer(context, CL_MEM_WRITE_ONLY, 3 * sizeof(double), NULL, &err);
+	output_fp_ee_pose_buf = clCreateBuffer(context, CL_MEM_WRITE_ONLY, 3 * sizeof(double), NULL, &err);
 	checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'output_fp_ee_pose_buf' failed");
 
 	printf("FINISH INIT.\n");
