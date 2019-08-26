@@ -131,26 +131,32 @@ matrix_t* resetStateReaching(int rand_angle, int dest_pos, int state_dim, int ac
 
 
 	// TODO: get pos from kernel
-	cout << "Before initializing the input to kernel" << endl;
 
 	initInput();
-	cout << "Finish trig. init" << endl;
 	initKMInput();
-
-	cout << "Before entering kernel execution" << endl;
 
 	run();
 	runKM();
+	runFPKM();
+
+	cout << "Finish kernel execution" << endl;
+	revertPose(output_ee_pose, ee_pos);
 
 	cout << "Result from KM kernel execution" << endl;
-	for (int i = 0; i < 6; ++i) {
-		cout << output_ee_pose[i] << " ";
+	for (int i = 0; i < 3; ++i) {
+		cout << ee_pos[i] << " ";
 	}
 	cout << endl;
 
-	cout << "Finish kernel execution" << endl;
+	cout << "-------------------------------" << endl;
 
-	revertPose(output_ee_pose, ee_pos);
+	cout << "Result from FPKM kernel execution" << endl;
+	for (int i = 0; i < 3; ++i) {
+		cout << output_fp_ee_pose[i] << " ";
+	}
+	cout << endl;
+
+
 
 	// set initial arm pose
 	for (int i = 0; i < 3; ++i) {

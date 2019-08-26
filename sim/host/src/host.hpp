@@ -32,6 +32,7 @@
 
 
 extern ulong* output_ee_pose;
+extern double* output_fp_ee_pose;
 
 void checkStatus(cl_int status, const char* file, int line, const char* msg);
 double randAngleRads(double lower, double upper);

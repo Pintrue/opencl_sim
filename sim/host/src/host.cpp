@@ -8,6 +8,8 @@
 #include "host.hpp"
 
 
+#define DEBUG_PRTOUT
+
 using namespace std;
 
 
@@ -31,6 +33,15 @@ ulong* output_trig_vals;// = new ulong[NUMBER_OF_ELEMS];
 
 // long* input_trig_vals;
 ulong* output_ee_pose;
+
+
+cl_kernel fp_km_kernel;
+
+cl_mem input_radians_buf;
+cl_mem output_fp_ee_pose_buf;
+
+double* input_radians;
+double* output_fp_ee_pose;
 
 
 // Function prototypes
@@ -105,7 +116,7 @@ void checkStatus(cl_int status,
 				int line,
 				const char* msg) {
 	if (status != CL_SUCCESS) {
-		printf("ERROR: at %s: line %d\n", file, line);
+		printf("ERROR (code %d): at %s: line %d\n", status, file, line);
 		printf("\t%s.\n", msg);
 		exit(status);
 	}
@@ -150,6 +161,7 @@ bool initOpencl() {
 	}
 
 	// Obtain the OpenCL device
+	#ifdef DEBUG_PRTOUT
 	cl_device_id* devices;
 	devices = (cl_device_id*) malloc(sizeof(cl_device_id) * 5);
 	clGetDeviceIDs(platform, CL_DEVICE_TYPE_ALL, 5, devices, NULL);
@@ -163,6 +175,7 @@ bool initOpencl() {
 		printf("%d. Device: %s\n", i + 1, value);
 		free(value);
 	}
+	#endif
 
 	err = clGetDeviceIDs(platform, CL_DEVICE_TYPE_ALL, 1, &device, NULL);
 	checkStatus(err, __FILE__, __LINE__, "'clGetDeviceIDs()' failed");
@@ -223,12 +236,21 @@ bool initOpencl() {
 	km_kernel = clCreateKernel(program, km_kernel_name, &err);
 	checkStatus(err, __FILE__, __LINE__, "'clCreateKernel()' failed");
 
+	const char* fp_km_kernel_name = "get_pose_by_jnts";
+	fp_km_kernel = clCreateKernel(program, fp_km_kernel_name, &err);
+	checkStatus(err, __FILE__, __LINE__, "'clCreateKernel()' failed");
+
+
 	// Create the input buffer
 	input_jnt_angles_buf = clCreateBuffer(context, CL_MEM_READ_ONLY, NUMBER_OF_ELEMS * sizeof(uint), NULL, &err);
 	checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'input_jnt_angles_buf' failed");
 
 	// input_trig_vals_buf = clCreateBuffer(context, CL_MEM_READ_ONLY, NUMBER_OF_ELEMS * sizeof(long), NULL, &err);
 	// checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'input_trig_vals_buf' failed");
+
+	input_radians_buf = clCreateBuffer(context, CL_MEM_READ_ONLY, NUMBER_OF_ELEMS * sizeof(double), NULL, &err);
+	checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'input_radians_buf' failed");
+
 
 	// Create the output buffer
 	output_trig_vals_buf = clCreateBuffer(context, CL_MEM_WRITE_ONLY, NUMBER_OF_ELEMS * sizeof(ulong), NULL, &err);
@@ -237,18 +259,20 @@ bool initOpencl() {
 	output_ee_pose_buf = clCreateBuffer(context, CL_MEM_WRITE_ONLY, 6 * sizeof(ulong), NULL, &err);
 	checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'output_ee_pose_buf' failed");
 
+	output_fp_ee_pose_buf = clCreateBUffer(context, CL_MEM_WRITE_ONLY, 3 * sizeof(double), NULL, &err);
+	checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'output_fp_ee_pose_buf' failed");
+
 	printf("FINISH INIT.\n");
 	return true;
 }
 
 
 void initInput() {
-	printf("Entered initInput()\n");
-
-//	double* test = new double[3];
 	input_jnt_angles = new uint[NUMBER_OF_ELEMS];
 	output_trig_vals = new ulong[NUMBER_OF_ELEMS];
-	printf("new\n");	
+
+	input_radians = new double[NUMBER_OF_ELEMS];
+	output_fp_ee_pose = new double[3];
 
 	// Randomize the input elements
 	double ja_0, ja_1, ja_2;		// cosine angle radians
@@ -283,6 +307,12 @@ void initInput() {
 	input_jnt_angles[4] = -991564915 + delta_ja_int[1];
 	input_jnt_angles[5] = 6773484103 - delta_ja_int[2] - delta_ja_int[1];
 	
+	input_radians[0] = ja_0;
+	input_radians[1] = ja_1;
+	input_radians[2] = ja_2;
+	input_radians[3] = ja_0 - M_PI_2;
+	input_radians[4] = ja_1 - M_PI_2;
+	input_radians[5] = ja_2 - M_PI_2;
 	// printf("After conversion:\n");
 	// for (int i = 0; i < NUMBER_OF_ELEMS; ++i) {
 	// 	printf("ja[%d] = %u\n", i, input_jnt_angles[i]);
@@ -326,7 +356,6 @@ void initKMInput() {
 
 
 void run() {
-	printf("Entered run()\n");
 	cl_int err;
 
 	// clock_t begin = clock();
@@ -337,14 +366,12 @@ void run() {
 	cl_event kernel_event;
 	cl_event finish_event;
 
-	printf("Enqueue writes to input buffers\n");
 	// Enqueue write commands to the input buffer
 	cl_event write_events[1];
 	err = clEnqueueWriteBuffer(command_queue, input_jnt_angles_buf, CL_FALSE,
 			0, NUMBER_OF_ELEMS * sizeof(uint), input_jnt_angles, 0, NULL, &write_events[0]);
 	checkStatus(err, __FILE__, __LINE__, "'clEnqueueWriteBuffer()' for 'input_jnt_angles_buf' failed");
 
-	printf("Setting kernel argument\n");
 	// Set kernel argument
 	unsigned argi = 0;
 
@@ -356,7 +383,6 @@ void run() {
 			&output_trig_vals_buf);
 	checkStatus(err, __FILE__, __LINE__, "'clSetKernelArg()' failed");
 
-	printf("Launching the kernel\n");
 	// Launch the kernel
 	const size_t global_work_size = NUMBER_OF_ELEMS;
 	err = clEnqueueNDRangeKernel(command_queue, kernel, 1, NULL,
@@ -381,12 +407,11 @@ void run() {
 	double elapsed_time = (end.tv_sec - begin.tv_sec) * 1e6 + (end.tv_nsec - begin.tv_nsec) / 1e3;
 
 	// double elapsed_time = double(end - begin) / CLOCKS_PER_SEC;
-	printf("Kernel time: %0.3lf microseconds.\n", elapsed_time);
+	printf("Kernel 1 time: %0.3lf microseconds.\n", elapsed_time);
 
 	// Release all events
 	clReleaseEvent(kernel_event);
 	clReleaseEvent(finish_event);
-	printf("Finish kernel run()\n");
 }
 
 
@@ -445,7 +470,67 @@ void runKM() {
 	double elapsed_time = (end.tv_sec - begin.tv_sec) * 1e6 + (end.tv_nsec - begin.tv_nsec) / 1e3;
 
 	// double elapsed_time = double(end - begin) / CLOCKS_PER_SEC;
-	printf("Kernel time: %0.3lf microseconds.\n", elapsed_time);
+	printf("Kernel time 2: %0.3lf microseconds.\n", elapsed_time);
+
+	// Release all events
+	clReleaseEvent(kernel_event);
+	clReleaseEvent(finish_event);
+}
+
+
+void runFPKM() {
+	cl_int err;
+
+	// clock_t begin = clock();
+	struct timespec begin, end;
+	printf("Start timing\n");
+	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &begin);
+
+	cl_event kernel_event;
+	cl_event finish_event;
+
+	// Enqueue write commands to the input buffer
+	cl_event write_events[1];
+	err = clEnqueueWriteBuffer(command_queue, input_radians_buf, CL_FALSE,
+			0, NUMBER_OF_ELEMS * sizeof(double), input_radians, 0, NULL, &write_events[0]);
+	checkStatus(err, __FILE__, __LINE__, "'clEnqueueWriteBuffer()' for 'input_jnt_angles_buf' failed");
+
+	// Set kernel argument
+	unsigned argi = 0;
+
+	err = clSetKernelArg(fp_km_kernel, argi++, sizeof(cl_mem),
+			&input_radians_buf);
+	checkStatus(err, __FILE__, __LINE__, "'clSetKernelArg()' failed");
+
+	err = clSetKernelArg(fp_km_kernel, argi++, sizeof(cl_mem),
+			&output_fp_ee_pose_buf);
+	checkStatus(err, __FILE__, __LINE__, "'clSetKernelArg()' failed");
+
+	// Launch the kernel
+	const size_t global_work_size = 1;
+	err = clEnqueueNDRangeKernel(command_queue, fp_km_kernel, 1, NULL,
+			&global_work_size, NULL, 1, write_events, &kernel_event);
+	checkStatus(err, __FILE__, __LINE__, "'clEnqueueNDRangeKernel()' failed");
+
+	// Enqueue read commands on the output buffer
+	err = clEnqueueReadBuffer(command_queue, output_fp_ee_pose_buf, CL_FALSE, 0,
+			3 * sizeof(double), output_fp_ee_pose, 1, &kernel_event,
+			&finish_event);
+	checkStatus(err, __FILE__, __LINE__, "'clEnqueueReadBuffer()' failed");
+
+	// Release local event
+	clReleaseEvent(write_events[0]);
+
+	// Wait for the output write to finish
+	clWaitForEvents(1, &finish_event);
+
+
+	// clock_t end = clock();
+	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+	double elapsed_time = (end.tv_sec - begin.tv_sec) * 1e6 + (end.tv_nsec - begin.tv_nsec) / 1e3;
+
+	// double elapsed_time = double(end - begin) / CLOCKS_PER_SEC;
+	printf("Kernel time 3: %0.3lf microseconds.\n", elapsed_time);
 
 	// Release all events
 	clReleaseEvent(kernel_event);
@@ -460,6 +545,10 @@ void cleanup() {
 
 	if (km_kernel) {
 		clReleaseKernel(km_kernel);
+	}
+
+	if (fp_km_kernel) {
+		clReleaseKernel(fp_km_kernel);
 	}
 
 	if (program) {
@@ -482,6 +571,10 @@ void cleanup() {
 	// 	clReleaseMemObject(input_trig_vals_buf);
 	// }
 
+	if (input_radians_buf) {
+		clReleaseMemObject(input_radians_buf);
+	}
+
 	if (output_trig_vals_buf) {
 		clReleaseMemObject(output_trig_vals_buf);
 	}
@@ -490,8 +583,16 @@ void cleanup() {
 		clReleaseMemObject(output_ee_pose_buf);
 	}
 
+	if (output_fp_ee_pose_buf) {
+		clReleaseMemObject(output_fp_ee_pose_buf);
+	}
+
 	if (input_jnt_angles) {
 		delete[] input_jnt_angles;
+	}
+
+	if (input_radians) {
+		delete[] input_radians;
 	}
 
 	if (output_trig_vals) {
@@ -500,6 +601,10 @@ void cleanup() {
 
 	if (output_ee_pose) {
 		delete[] output_ee_pose;
+	}
+
+	if (output_fp_ee_pose) {
+		delete[] output_fp_ee_pose;
 	}
 
 	printf("FINISH CLEANUP.\n");

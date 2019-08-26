@@ -1,3 +1,6 @@
+#pragma OPENCL EXTENSION cl_khr_fp64 : enable
+
+
 __kernel void cosine_int_32(__global const uint* restrict jnt_angles,
 							__global ulong* restrict output) {
 
@@ -87,4 +90,18 @@ __kernel void get_pose_by_jnts_int_32(__global const long* restrict trig_vals,
 	ee_pose[4] = trig_vals[0];
 	ee_pose[5] = trig_vals[3];
 	printf("x = %lu, y = %lu, z = %lu, d1 = %lu, cos(a1) = %lu, sin(a1) = %lu\n", ee_pose[0], ee_pose[1], ee_pose[2], ee_pose[3], ee_pose[4], ee_pose[5]);
+}
+
+
+__kernel void get_pose_by_jnts(__global const double* restrict radians),
+								__global double* restrict ee_pose) {
+	double8 radians_vec = (double8) (radians[0], radians[1], radians[2],
+									radians[3], radians[4], radians[5],
+									0.0, 0.0);
+	
+	double8 trig_vals_vec = cos(radians_vec);
+	printf("Output from floating-point version\n");
+	for (int i = 0; i < 6; ++i) {
+		printf("trig_vals_vec[%d] = %lf\n", i, trig_vals_vec[i]);
+	}
 }
