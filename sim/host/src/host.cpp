@@ -150,6 +150,20 @@ bool initOpencl() {
 	}
 
 	// Obtain the OpenCL device
+	cl_device_id* devices;
+	devices = (cl_device_id*) malloc(sizeof(cl_device_id) * 5);
+	clGetDeviceIDs(platform, CL_DEVICE_TYPE_ALL, 5, devices, NULL);
+
+	size_t value_size;
+	char* value;
+	for (int i = 0; i < 5; ++i) {
+		clGetDeviceInfo(devices[i], CL_DEVICE_NAME, 0, NULL, &value_siz$
+		value = (char*) malloc(value_size);
+		clGetDeviceInfo(devices[i], CL_DEVICE_NAME, value_size, value, $
+		printf("%d. Device: %s\n", i + 1, value);
+		free(value);
+	}
+
 	err = clGetDeviceIDs(platform, CL_DEVICE_TYPE_ALL, 1, &device, NULL);
 	checkStatus(err, __FILE__, __LINE__, "'clGetDeviceIDs()' failed");
 
