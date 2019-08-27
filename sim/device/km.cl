@@ -139,7 +139,7 @@ __kernel void get_pose_by_jnts(__global const double* restrict radians,
 	#pragma unroll
 	for (int i = 0; i < 3; ++i) {
 		double temp = link_lengths[i] * cos(radians[i + 5]);
-		printf("temp = %lf\n", temp);
+		printf("sin(a%d): %lf\n", i + 2, cos(radians[i + 5]));
 		ee_pose[1] += temp;
 	}
 	
