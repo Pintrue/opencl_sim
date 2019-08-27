@@ -248,7 +248,7 @@ bool initOpencl() {
 	// input_trig_vals_buf = clCreateBuffer(context, CL_MEM_READ_ONLY, NUMBER_OF_ELEMS * sizeof(long), NULL, &err);
 	// checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'input_trig_vals_buf' failed");
 
-	input_radians_buf = clCreateBuffer(context, CL_MEM_READ_ONLY, NUMBER_OF_ELEMS * sizeof(double), NULL, &err);
+	input_radians_buf = clCreateBuffer(context, CL_MEM_READ_ONLY, 8 * sizeof(double), NULL, &err);
 	checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'input_radians_buf' failed");
 
 
@@ -271,7 +271,7 @@ void initInput() {
 	input_jnt_angles = new uint[NUMBER_OF_ELEMS];
 	output_trig_vals = new ulong[NUMBER_OF_ELEMS];
 
-	input_radians = new double[NUMBER_OF_ELEMS];
+	input_radians = new double[8];
 	output_fp_ee_pose = new double[3];
 
 	// Randomize the input elements
@@ -308,17 +308,20 @@ void initInput() {
 	input_jnt_angles[5] = 6773484103 - delta_ja_int[2] - delta_ja_int[1];
 	
 	input_radians[0] = ja_0;
-	input_radians[1] = ja_1;
-	input_radians[2] = ja_2;
-	input_radians[3] = ja_0 - M_PI_2;
-	input_radians[4] = ja_1 - M_PI_2;
-	input_radians[5] = ja_2 - M_PI_2;
+	input_radians[1] = atan2(3.5, 3.9);
+	input_radians[2] = ja_1 + atan2(1.70, 10.50);
+	input_radians[3] = ja_2 + atan2(3.50, 16.50);
+	input_radians[4] = ja_0 - M_PI_2;
+	input_radians[5] = input_radians[1] - M_PI_2;
+	input_radians[6] = input_radians[2] - M_PI_2;
+	input_radians[7] = input_radians[3] - M_PI_2;
+
 	// printf("After conversion:\n");
 	// for (int i = 0; i < NUMBER_OF_ELEMS; ++i) {
 	// 	printf("ja[%d] = %u\n", i, input_jnt_angles[i]);
 	// }
 	// TODO: verification output
-	printf("Finish init\n");
+	printf("Finish init of input joint angles\n");
 }
 
 
