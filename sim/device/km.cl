@@ -1,5 +1,6 @@
-#pragma OPENCL EXTENSION cl_khr_fp64 : enable
+// #pragma OPENCL EXTENSION cl_khr_fp64 : enable
 //#define vec
+
 
 // __kernel void cosine_int_32(__global const uint* restrict jnt_angles,
 // 							__global ulong* restrict output) {
