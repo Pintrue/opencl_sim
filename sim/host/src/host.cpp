@@ -309,8 +309,8 @@ void initInput() {
 	
 	input_radians[0] = ja_0;
 	input_radians[1] = atan2(3.5, 3.9);
-	input_radians[2] = ja_1 + atan2(1.70, 10.50);
-	input_radians[3] = ja_2 + atan2(3.50, 16.50);
+	input_radians[2] = atan2(1.70, 10.50) + ja_1;
+	input_radians[3] = atan2(3.50, 16.50) - ja_2 - ja_1;
 	input_radians[4] = ja_0 - M_PI_2;
 	input_radians[5] = input_radians[1] - M_PI_2;
 	input_radians[6] = input_radians[2] - M_PI_2;
