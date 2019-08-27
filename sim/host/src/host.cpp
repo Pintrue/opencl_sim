@@ -495,7 +495,7 @@ void runFPKM() {
 	// Enqueue write commands to the input buffer
 	cl_event write_events[1];
 	err = clEnqueueWriteBuffer(command_queue, input_radians_buf, CL_FALSE,
-			0, NUMBER_OF_ELEMS * sizeof(double), input_radians, 0, NULL, &write_events[0]);
+			0, 8 * sizeof(double), input_radians, 0, NULL, &write_events[0]);
 	checkStatus(err, __FILE__, __LINE__, "'clEnqueueWriteBuffer()' for 'input_jnt_angles_buf' failed");
 
 	// Set kernel argument
