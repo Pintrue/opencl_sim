@@ -133,12 +133,14 @@ __kernel void get_pose_by_jnts(__global const double* restrict radians,
 	double link_lengths[3] = {sqrt(3.5*3.5+3.9*3.9), sqrt(1.7*1.7+10.5*10.5), sqrt(3.5*3.5+16.5*16.5)};
 	
 	// y = base_height/2.9;
-	ee_pose[1] += 2.9;
+	ee_pose[1] = 2.9;
 
 	// y += l1*sin(a2) + l2*sin(a3) + l3*sin(a4);
 	#pragma unroll
 	for (int i = 0; i < 3; ++i) {
-		ee_pose[1] += link_lengths[i] * cos(radians[i + 5]);
+		double temp = link_lengths[i] * cos(radians[i + 5]);
+		printf("temp = %lf\n", temp);
+		ee_pose[1] += temp;
 	}
 	
 	// d1 = -l2*cos(a3);
