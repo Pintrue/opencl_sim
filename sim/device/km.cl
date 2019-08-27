@@ -54,7 +54,7 @@ __kernel void cosine_int_32(__global const uint* restrict jnt_angles,
 
 	// obtain trigonometry encoding value at that LUT index
 	output[idx] = (ulong) grad_table_32[angle_idx] * angle_input + intercept_table_32[angle_idx];
-	printf("rad = %u, output[%d] = %lu\n", angle_input, idx, output[idx]);
+	// printf("rad = %u, output[%d] = %lu\n", angle_input, idx, output[idx]);
 }
 
 
