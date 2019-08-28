@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <ctime>
 #include <time.h>
+#include <vector>
 #include "CL/opencl.h"
 #include "host.hpp"
 
@@ -17,7 +18,9 @@ using namespace std;
 cl_platform_id platform = NULL;
 cl_device_id device;
 cl_context context = NULL;
-cl_command_queue command_queue;
+// cl_command_queue command_queue;
+size_t cq_size = 3;
+vector<cl_command_queue> command_queues(cq_size);
 cl_program program = NULL;
 cl_kernel kernel;
 cl_kernel km_kernel;
@@ -224,8 +227,12 @@ bool initOpencl() {
 	checkStatus(err, __FILE__, __LINE__, "'clBuildProgram()' failed");
 
 	// Create the command queue
-	command_queue = clCreateCommandQueue(context, device, CL_QUEUE_PROFILING_ENABLE, &err);
-	checkStatus(err, __FILE__, __LINE__, "clCreateCommandQueue()' failed");
+	// command_queue = clCreateCommandQueue(context, device, CL_QUEUE_PROFILING_ENABLE, &err);
+	// checkStatus(err, __FILE__, __LINE__, "clCreateCommandQueue()' failed");
+	for (int i = 0; i < cq_size; ++i) {
+		command_queues[i] = clCreateCommandQueue(context, device,
+								CL_QUEUE_PROFILING_ENABLE, &err);
+	}
 
 	// Create the kernel
 	const char* kernel_name = "cosine_int_32";
@@ -371,7 +378,7 @@ void run() {
 
 	// Enqueue write commands to the input buffer
 	cl_event write_events[1];
-	err = clEnqueueWriteBuffer(command_queue, input_jnt_angles_buf, CL_FALSE,
+	err = clEnqueueWriteBuffer(command_queues[0], input_jnt_angles_buf, CL_FALSE,
 			0, NUMBER_OF_ELEMS * sizeof(uint), input_jnt_angles, 0, NULL, &write_events[0]);
 	checkStatus(err, __FILE__, __LINE__, "'clEnqueueWriteBuffer()' for 'input_jnt_angles_buf' failed");
 
@@ -388,12 +395,12 @@ void run() {
 
 	// Launch the kernel
 	const size_t global_work_size = NUMBER_OF_ELEMS;
-	err = clEnqueueNDRangeKernel(command_queue, kernel, 1, NULL,
+	err = clEnqueueNDRangeKernel(command_queues[0], kernel, 1, NULL,
 			&global_work_size, NULL, 1, write_events, &kernel_event);
 	checkStatus(err, __FILE__, __LINE__, "'clEnqueueNDRangeKernel()' failed");
 
 	// Enqueue read commands on the output buffer
-	err = clEnqueueReadBuffer(command_queue, output_trig_vals_buf, CL_FALSE, 0,
+	err = clEnqueueReadBuffer(command_queue[0], output_trig_vals_buf, CL_FALSE, 0,
 			NUMBER_OF_ELEMS * sizeof(ulong), output_trig_vals, 1, &kernel_event,
 			&finish_event);
 	checkStatus(err, __FILE__, __LINE__, "'clEnqueueReadBuffer()' failed");
@@ -451,12 +458,12 @@ void runKM() {
 
 	// Launch the kernel
 	const size_t global_work_size = 1;
-	err = clEnqueueNDRangeKernel(command_queue, km_kernel, 1, NULL,
+	err = clEnqueueNDRangeKernel(command_queues[1], km_kernel, 1, NULL,
 			&global_work_size, NULL, 0, NULL, &kernel_event);
 	checkStatus(err, __FILE__, __LINE__, "'clEnqueueNDRangeKernel()' failed");
 
 	// Enqueue read commands on the output buffer
-	err = clEnqueueReadBuffer(command_queue, output_ee_pose_buf, CL_FALSE, 0,
+	err = clEnqueueReadBuffer(command_queues[1], output_ee_pose_buf, CL_FALSE, 0,
 			6 * sizeof(ulong), output_ee_pose, 1, &kernel_event,
 			&finish_event);
 	checkStatus(err, __FILE__, __LINE__, "'clEnqueueReadBuffer()' failed");
@@ -494,7 +501,7 @@ void runFPKM() {
 
 	// Enqueue write commands to the input buffer
 	cl_event write_events[1];
-	err = clEnqueueWriteBuffer(command_queue, input_radians_buf, CL_FALSE,
+	err = clEnqueueWriteBuffer(command_queues[2], input_radians_buf, CL_FALSE,
 			0, 8 * sizeof(double), input_radians, 0, NULL, &write_events[0]);
 	checkStatus(err, __FILE__, __LINE__, "'clEnqueueWriteBuffer()' for 'input_jnt_angles_buf' failed");
 
@@ -511,12 +518,12 @@ void runFPKM() {
 
 	// Launch the kernel
 	const size_t global_work_size = 1;
-	err = clEnqueueNDRangeKernel(command_queue, fp_km_kernel, 1, NULL,
+	err = clEnqueueNDRangeKernel(command_queues[2], fp_km_kernel, 1, NULL,
 			&global_work_size, NULL, 1, write_events, &kernel_event);
 	checkStatus(err, __FILE__, __LINE__, "'clEnqueueNDRangeKernel()' failed");
 
 	// Enqueue read commands on the output buffer
-	err = clEnqueueReadBuffer(command_queue, output_fp_ee_pose_buf, CL_FALSE, 0,
+	err = clEnqueueReadBuffer(command_queues[2], output_fp_ee_pose_buf, CL_FALSE, 0,
 			3 * sizeof(double), output_fp_ee_pose, 1, &kernel_event,
 			&finish_event);
 	checkStatus(err, __FILE__, __LINE__, "'clEnqueueReadBuffer()' failed");
@@ -558,8 +565,10 @@ void cleanup() {
 		clReleaseProgram(program);
 	}
 
-	if (command_queue) {
-		clReleaseCommandQueue(command_queue);
+	for (int i = 0; i < cq_size; ++i) {
+		if (command_queues[i]) {
+			clReleaseCommandQueue(command_queues[i]);
+		}
 	}
 
 	if (context) {
