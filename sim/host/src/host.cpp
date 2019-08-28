@@ -26,13 +26,13 @@ cl_kernel kernel;
 cl_kernel km_kernel;
 
 cl_mem input_jnt_angles_buf;
-cl_mem output_trig_vals_buf;
+// cl_mem output_trig_vals_buf;
 // cl_mem input_trig_vals_buf;
 cl_mem output_ee_pose_buf;
 
 // Input data
 uint* input_jnt_angles;// = new uint[NUMBER_OF_ELEMS];
-ulong* output_trig_vals;// = new ulong[NUMBER_OF_ELEMS];
+// ulong* output_trig_vals;// = new ulong[NUMBER_OF_ELEMS];
 
 // long* input_trig_vals;
 ulong* output_ee_pose;
@@ -260,8 +260,8 @@ bool initOpencl() {
 
 
 	// Create the output buffer
-	output_trig_vals_buf = clCreateBuffer(context, CL_MEM_WRITE_ONLY, NUMBER_OF_ELEMS * sizeof(ulong), NULL, &err);
-	checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'output_trig_vals_buf' failed");
+	// output_trig_vals_buf = clCreateBuffer(context, CL_MEM_WRITE_ONLY, NUMBER_OF_ELEMS * sizeof(ulong), NULL, &err);
+	// checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'output_trig_vals_buf' failed");
 
 	output_ee_pose_buf = clCreateBuffer(context, CL_MEM_WRITE_ONLY, 6 * sizeof(ulong), NULL, &err);
 	checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'output_ee_pose_buf' failed");
@@ -276,7 +276,7 @@ bool initOpencl() {
 
 void initInput() {
 	input_jnt_angles = new uint[NUMBER_OF_ELEMS];
-	output_trig_vals = new ulong[NUMBER_OF_ELEMS];
+	// output_trig_vals = new ulong[NUMBER_OF_ELEMS];
 
 	input_radians = new double[8];
 	output_fp_ee_pose = new double[3];
@@ -334,7 +334,7 @@ void initInput() {
 
 void initInput(double jnt_angles[3]) {
 	input_jnt_angles = new uint[NUMBER_OF_ELEMS];
-	output_trig_vals = new ulong[NUMBER_OF_ELEMS];
+	// output_trig_vals = new ulong[NUMBER_OF_ELEMS];
 
 	uint delta_ja_int[3] = {convertRadsToInt(jnt_angles[0]), convertRadsToInt(jnt_angles[1]), convertRadsToInt(jnt_angles[2])};
 	// _ja_0 = -0.502065;
@@ -374,7 +374,7 @@ void run() {
 	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &begin);
 
 	cl_event kernel_event;
-	cl_event finish_event;
+	// cl_event finish_event;
 
 	// Enqueue write commands to the input buffer
 	cl_event write_events[1];
@@ -389,9 +389,9 @@ void run() {
 			&input_jnt_angles_buf);
 	checkStatus(err, __FILE__, __LINE__, "'clSetKernelArg()' failed");
 
-	err = clSetKernelArg(kernel, argi++, sizeof(cl_mem),
-			&output_trig_vals_buf);
-	checkStatus(err, __FILE__, __LINE__, "'clSetKernelArg()' failed");
+	// err = clSetKernelArg(kernel, argi++, sizeof(cl_mem),
+	// 		&output_trig_vals_buf);
+	// checkStatus(err, __FILE__, __LINE__, "'clSetKernelArg()' failed");
 
 	// Launch the kernel
 	const size_t global_work_size = NUMBER_OF_ELEMS;
@@ -400,16 +400,17 @@ void run() {
 	checkStatus(err, __FILE__, __LINE__, "'clEnqueueNDRangeKernel()' failed");
 
 	// Enqueue read commands on the output buffer
-	err = clEnqueueReadBuffer(command_queue[0], output_trig_vals_buf, CL_FALSE, 0,
-			NUMBER_OF_ELEMS * sizeof(ulong), output_trig_vals, 1, &kernel_event,
-			&finish_event);
-	checkStatus(err, __FILE__, __LINE__, "'clEnqueueReadBuffer()' failed");
+	// err = clEnqueueReadBuffer(command_queues[0], output_trig_vals_buf, CL_FALSE, 0,
+	// 		NUMBER_OF_ELEMS * sizeof(ulong), output_trig_vals, 1, &kernel_event,
+	// 		&finish_event);
+	// checkStatus(err, __FILE__, __LINE__, "'clEnqueueReadBuffer()' failed");
 
 	// Release local event
 	clReleaseEvent(write_events[0]);
 
 	// Wait for the output write to finish
-	clWaitForEvents(1, &finish_event);
+	clWaitForEvents(1, &kernel_event);
+	// clWaitForEvents(1, &finish_event);
 
 
 	// clock_t end = clock();
@@ -421,7 +422,7 @@ void run() {
 
 	// Release all events
 	clReleaseEvent(kernel_event);
-	clReleaseEvent(finish_event);
+	// clReleaseEvent(finish_event);
 }
 
 
@@ -448,9 +449,9 @@ void runKM() {
 	// Set kernel argument
 	unsigned argi = 0;
 
-	err = clSetKernelArg(km_kernel, argi++, sizeof(cl_mem),
-			&output_trig_vals_buf);
-	checkStatus(err, __FILE__, __LINE__, "'clSetKernelArg()' failed");
+	// err = clSetKernelArg(km_kernel, argi++, sizeof(cl_mem),
+	// 		&output_trig_vals_buf);
+	// checkStatus(err, __FILE__, __LINE__, "'clSetKernelArg()' failed");
 
 	err = clSetKernelArg(km_kernel, argi++, sizeof(cl_mem),
 			&output_ee_pose_buf);
@@ -587,9 +588,9 @@ void cleanup() {
 		clReleaseMemObject(input_radians_buf);
 	}
 
-	if (output_trig_vals_buf) {
-		clReleaseMemObject(output_trig_vals_buf);
-	}
+	// if (output_trig_vals_buf) {
+	// 	clReleaseMemObject(output_trig_vals_buf);
+	// }
 
 	if (output_ee_pose_buf) {
 		clReleaseMemObject(output_ee_pose_buf);
@@ -607,9 +608,9 @@ void cleanup() {
 		delete[] input_radians;
 	}
 
-	if (output_trig_vals) {
-		delete[] output_trig_vals;
-	}
+	// if (output_trig_vals) {
+	// 	delete[] output_trig_vals;
+	// }
 
 	if (output_ee_pose) {
 		delete[] output_ee_pose;

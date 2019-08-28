@@ -1,16 +1,11 @@
 // #pragma OPENCL EXTENSION cl_khr_fp64 : enable
 //#define vec
 
-#define channeling
-
-#ifdef channeling
-	#pragma OPENCL EXTENSION cl_intel_channels : enable
-	channel long trig_val_chan __attribute__((depth(6)));
-#endif
+#pragma OPENCL EXTENSION cl_intel_channels : enable
+channel long trig_val_chan __attribute__((depth(6)));
 
 
-__kernel void cosine_int_32(__global const uint* restrict jnt_angles,
-							__global ulong* restrict output) {
+__kernel void cosine_int_32(__global const uint* restrict jnt_angles) {
 
 	__local char grad_table_32[4095];
 	__local long intercept_table_32[4095];
@@ -61,61 +56,24 @@ __kernel void cosine_int_32(__global const uint* restrict jnt_angles,
 	uint angle_idx = (angle_input & 0xFFF00000) >> 20;
 
 	ulong trig_val_temp = (ulong) grad_table_32[angle_idx] * angle_input + intercept_table_32[angle_idx];
-	#ifndef channeling
 	// obtain trigonometry encoding value at that LUT index
-	output[idx] = trig_val_temp;
-	#else
+
 	write_channel_intel(trig_val_chan, trig_val_temp);
-	#endif
+
 
 	// printf("rad = %u, output[%d] = %lu\n", angle_input, idx, output[idx]);
 }
 
 
-__kernel void get_pose_by_jnts_int_32(__global const long* restrict trig_vals,
-										__global ulong* restrict ee_pose) {
-	// __local long link_lengths[4];
-
-	// Link lengths in integer-encoding
-	// 290 = 290;	// base height
-	// 524 = 524;
-	// 1064 = 1064;
-	// 1687 = 1687;
-
-	#ifndef channeling
-
-	long d2 = 290;
-	long d3 = 524 * 3581808896;		// l1 * sin(a2)
-	long d4 = 1064 * trig_vals[4];	// l2 * sin(a3)
-	long d5 = 1687 * trig_vals[5];	// l3 * sin(a4)
-
-	// Aggregate the four sections above to obtain Y-coordinate
-	ee_pose[1] = d2 + d3 + d4 + d5;
-
-	long d6 = 1687 * trig_vals[2];	// l3 * cos(a4)
-	long d7 = 1064 * trig_vals[1];	// l2 * cos(a3)
-	long d8 = 524 * 3745731782; 	// l1 * cos(a2)
-
-	long d1 = d6 - d7 + d8;
-
-	// Use base angle to obtain X- and Z-coordinates
-	ee_pose[0] = d1 * trig_vals[3];	// d1 * sin(a1)
-	ee_pose[2] = d1 * trig_vals[0];	// d1 * cos(a1)
-
-	ee_pose[3] = d1;
-	ee_pose[4] = trig_vals[0];
-	ee_pose[5] = trig_vals[3];
-	// printf("x = %lu, y = %lu, z = %lu, d1 = %lu, cos(a1) = %lu, sin(a1) = %lu\n", ee_pose[0], ee_pose[1], ee_pose[2], ee_pose[3], ee_pose[4], ee_pose[5]);
-
-	#else
-
+// aggregate all the trig. values from the block-read channel before moving on
+__kernel void get_pose_by_jnts_int_32(__global ulong* restrict ee_pose) {
 	long trig_vals_channeled[6];
 	for (int i = 0; i < 6; ++i) {
 		trig_vals_channeled[i] = read_channel_intel(trig_val_chan);
 	}
 
 	long d2 = 290;
-	long d3 = 524 * 3581808896;		// l1 * sin(a2)
+	long d3 = 524 * 3581808896;					// l1 * sin(a2)
 	long d4 = 1064 * trig_vals_channeled[4];	// l2 * sin(a3)
 	long d5 = 1687 * trig_vals_channeled[5];	// l3 * sin(a4)
 
@@ -124,7 +82,7 @@ __kernel void get_pose_by_jnts_int_32(__global const long* restrict trig_vals,
 
 	long d6 = 1687 * trig_vals_channeled[2];	// l3 * cos(a4)
 	long d7 = 1064 * trig_vals_channeled[1];	// l2 * cos(a3)
-	long d8 = 524 * 3745731782; 	// l1 * cos(a2)
+	long d8 = 524 * 3745731782; 				// l1 * cos(a2)
 
 	long d1 = d6 - d7 + d8;
 
@@ -135,8 +93,6 @@ __kernel void get_pose_by_jnts_int_32(__global const long* restrict trig_vals,
 	ee_pose[3] = d1;
 	ee_pose[4] = trig_vals_channeled[0];
 	ee_pose[5] = trig_vals_channeled[3];
-
-	#endif
 }
 
 
