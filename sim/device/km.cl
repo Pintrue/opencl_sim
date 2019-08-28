@@ -5,7 +5,7 @@
 
 #ifdef channeling
 	#pragma OPENCL EXTENSION cl_intel_channels : enable
-	channel long trig_val_chan;
+	channel long trig_val_chan __attribute__((depth(6)));
 #endif
 
 
