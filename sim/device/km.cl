@@ -7,8 +7,12 @@ channel long trig_val_chan __attribute__((depth(6)));
 
 __kernel void cosine_int_32(__global const uint* restrict jnt_angles) {
 
-	__local char grad_table_32[4095];
-	__local long intercept_table_32[4095];
+	// __local char grad_table_32[4095];
+	// __local long intercept_table_32[4095];
+
+	__constant char grad_table_32[4095];
+	__constant long intercept_table_32[4095];
+
 
 	// init the LUT of integer-encoded cosine function
 	#pragma unroll 8
