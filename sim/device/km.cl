@@ -50,7 +50,7 @@ __kernel void cosine_int_32(__global const uint* restrict jnt_angles) {
 
 	// obtain work-item index and then the angle at that index
 	// int idx = get_global_id(0);
-	#pragma unroll 6
+
 	for (int idx = 0; idx < 6; ++idx) {
 		uint angle_input = jnt_angles[idx];
 
