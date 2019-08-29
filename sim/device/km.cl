@@ -17,13 +17,13 @@ __kernel void cosine_int_32(__global const uint* restrict jnt_angles) {
 		intercept_table_32[i] = 287708254;
 	}
 
-	#pragma unroll 8
+	#pragma unroll 4
 	for (uint i = 351; i < 819; ++i) {
 		grad_table_32[i] = 1;
 		intercept_table_32[i] = -368140054;
 	}
 
-	#pragma unroll 8
+	#pragma unroll 4
 	for (uint i = 819; i < 1872; ++i) {
 		grad_table_32[i] = 3;
 		intercept_table_32[i] = -2262381335;
@@ -35,7 +35,7 @@ __kernel void cosine_int_32(__global const uint* restrict jnt_angles) {
 		intercept_table_32[i] = 1717986918;
 	}
 
-	#pragma unroll 8
+	#pragma unroll 4
 	for (uint i = 2457; i < 3042; ++i) {
 		grad_table_32[i] = -1;
 		intercept_table_32[i] = 6871947672;
@@ -50,6 +50,7 @@ __kernel void cosine_int_32(__global const uint* restrict jnt_angles) {
 
 	// obtain work-item index and then the angle at that index
 	// int idx = get_global_id(0);
+	#pragma unroll 6
 	for (int idx = 0; idx < 6; ++idx) {
 		uint angle_input = jnt_angles[idx];
 
