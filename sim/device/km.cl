@@ -7,12 +7,8 @@ channel long trig_val_chan __attribute__((depth(6)));
 
 __kernel void cosine_int_32(__global const uint* restrict jnt_angles) {
 
-	// __local char grad_table_32[4095];
-	// __local long intercept_table_32[4095];
-
-	__constant char grad_table_32[4095];
-	__constant long intercept_table_32[4095];
-
+	__local char grad_table_32[4096];
+	__local long intercept_table_32[4096];
 
 	// init the LUT of integer-encoded cosine function
 	#pragma unroll 8
@@ -53,18 +49,18 @@ __kernel void cosine_int_32(__global const uint* restrict jnt_angles) {
 	//end init
 
 	// obtain work-item index and then the angle at that index
-	int idx = get_global_id(0);
-	uint angle_input = jnt_angles[idx];
-	
-	// mask and shift to obtain LUT index
-	uint angle_idx = (angle_input & 0xFFF00000) >> 20;
+	// int idx = get_global_id(0);
+	for (int idx = 0; idx < 6; ++idx) {
+		uint angle_input = jnt_angles[idx];
 
-	ulong trig_val_temp = (ulong) grad_table_32[angle_idx] * angle_input + intercept_table_32[angle_idx];
-	// obtain trigonometry encoding value at that LUT index
+		// mask and shift to obtain LUT index
+		uint angle_idx = (angle_input & 0xFFF00000) >> 20;
 
-	write_channel_intel(trig_val_chan, trig_val_temp);
+		// obtain trigonometry encoding value at that LUT index
+		ulong trig_val_temp = (ulong) grad_table_32[angle_idx] * angle_input + intercept_table_32[angle_idx];
 
-
+		write_channel_intel(trig_val_chan, trig_val_temp);
+	}
 	// printf("rad = %u, output[%d] = %lu\n", angle_input, idx, output[idx]);
 }
 

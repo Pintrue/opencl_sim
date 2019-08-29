@@ -394,7 +394,7 @@ void run() {
 	// checkStatus(err, __FILE__, __LINE__, "'clSetKernelArg()' failed");
 
 	// Launch the kernel
-	const size_t global_work_size = NUMBER_OF_ELEMS;
+	const size_t global_work_size = 1;
 	err = clEnqueueNDRangeKernel(command_queues[0], kernel, 1, NULL,
 			&global_work_size, NULL, 1, write_events, &kernel_event);
 	checkStatus(err, __FILE__, __LINE__, "'clEnqueueNDRangeKernel()' failed");
