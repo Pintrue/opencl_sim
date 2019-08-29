@@ -96,28 +96,28 @@ __kernel void get_pose_by_jnts_int_32(__global ulong* restrict ee_pose) {
 }
 
 
-__kernel void get_pose_by_jnts(__global const double* restrict radians,
-								__global double* restrict ee_pose) {
-	double link_lengths[3] = {sqrt(3.5*3.5+3.9*3.9), sqrt(1.7*1.7+10.5*10.5), sqrt(3.5*3.5+16.5*16.5)};
+// __kernel void get_pose_by_jnts(__global const double* restrict radians,
+// 								__global double* restrict ee_pose) {
+// 	double link_lengths[3] = {sqrt(3.5*3.5+3.9*3.9), sqrt(1.7*1.7+10.5*10.5), sqrt(3.5*3.5+16.5*16.5)};
 	
-	// y = base_height/2.9;
-	ee_pose[1] = 2.9;
+// 	// y = base_height/2.9;
+// 	ee_pose[1] = 2.9;
 
-	// y += l1*sin(a2) + l2*sin(a3) + l3*sin(a4);
-	#pragma unroll
-	for (int i = 0; i < 3; ++i) {
-		ee_pose[1] += link_lengths[i] * cos(radians[i + 5]);
-	}
+// 	// y += l1*sin(a2) + l2*sin(a3) + l3*sin(a4);
+// 	#pragma unroll
+// 	for (int i = 0; i < 3; ++i) {
+// 		ee_pose[1] += link_lengths[i] * cos(radians[i + 5]);
+// 	}
 	
-	// d1 = -l2*cos(a3);
-	double d1 = -link_lengths[1] * cos(radians[2]);
+// 	// d1 = -l2*cos(a3);
+// 	double d1 = -link_lengths[1] * cos(radians[2]);
 
-	// d1 += l1*cos(a2)+l3*cos(a4);
-	#pragma unroll
-	for (int i = 0; i < 3; i += 2) {
-		d1 += link_lengths[i] * cos(radians[i + 1]);
-	}
+// 	// d1 += l1*cos(a2)+l3*cos(a4);
+// 	#pragma unroll
+// 	for (int i = 0; i < 3; i += 2) {
+// 		d1 += link_lengths[i] * cos(radians[i + 1]);
+// 	}
 
-	ee_pose[0] = d1 * cos(radians[4]);
-	ee_pose[2] = d1 * cos(radians[0]);
-}
+// 	ee_pose[0] = d1 * cos(radians[4]);
+// 	ee_pose[2] = d1 * cos(radians[0]);
+// }
