@@ -73,19 +73,26 @@ __kernel void get_pose_by_jnts_int_32(__global ulong* restrict ee_pose) {
 		trig_vals_channeled[i] = read_channel_intel(trig_val_chan);
 	}
 
-	long d2 = 290;
-	long d3 = 524 * 3581808896;					// l1 * sin(a2)
-	long d4 = 1064 * trig_vals_channeled[4];	// l2 * sin(a3)
-	long d5 = 1687 * trig_vals_channeled[5];	// l3 * sin(a4)
+	// long d2 = 290;
+	// long d3 = 524 * 3581808896;					// l1 * sin(a2)
+	// long d4 = 1064 * trig_vals_channeled[4];	// l2 * sin(a3)
+	// long d5 = 1687 * trig_vals_channeled[5];	// l3 * sin(a4)
 
 	// Aggregate the four sections above to obtain Y-coordinate
-	ee_pose[1] = d2 + d3 + d4 + d5;
+	// ee_pose[1] = d2 + d3 + d4 + d5;
+	ee_pose[1] = 290
+		+ 524 * 3581808896
+		+ 1064 * trig_vals_channeled[4]
+		+ 1687 * trig_vals_channeled[5];
 
-	long d6 = 1687 * trig_vals_channeled[2];	// l3 * cos(a4)
-	long d7 = 1064 * trig_vals_channeled[1];	// l2 * cos(a3)
-	long d8 = 524 * 3745731782; 				// l1 * cos(a2)
+	// long d6 = 1687 * trig_vals_channeled[2];	// l3 * cos(a4)
+	// long d7 = 1064 * trig_vals_channeled[1];	// l2 * cos(a3)
+	// long d8 = 524 * 3745731782; 				// l1 * cos(a2)
 
-	long d1 = d6 - d7 + d8;
+	// long d1 = d6 - d7 + d8;
+	long d1 = 1687 * trig_vals_channeled[2]
+		- 1064 * trig_vals_channeled[1]
+		+ 524 * 3745731782;
 
 	// Use base angle to obtain X- and Z-coordinates
 	ee_pose[0] = d1 * trig_vals_channeled[3];	// d1 * sin(a1)
