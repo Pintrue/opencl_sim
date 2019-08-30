@@ -17,7 +17,7 @@ __kernel void cosine_int_32(__global const uint* restrict jnt_angles) {
 		intercept_table_32[i] = 287708254;
 	}
 
-	#pragma unroll 8
+	#pragma unroll 5
 	for (uint i = 351; i < 819; ++i) {
 		grad_table_32[i] = 1;
 		intercept_table_32[i] = -368140054;
