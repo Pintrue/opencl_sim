@@ -57,7 +57,7 @@ __kernel void cosine_int_32(__global const uint* restrict jnt_angles) {
 
 	for (uint cu_idx = 0; cu_idx < CU_NUM; ++cu_idx) {
 		for (uint idx = 0; idx < NUM_JA_PER_SET; ++idx) {
-			uint angle_input = jnt_angles[cu_idx * CU_NUM + idx];
+			uint angle_input = jnt_angles[cu_idx * NUM_JA_PER_SET + idx];
 
 			// mask and shift to obtain LUT index
 			uint angle_idx = (angle_input & 0xFFF00000) >> 20;
@@ -84,6 +84,7 @@ __kernel void get_pose_by_jnts_int_32(__global ulong* restrict ee_pose) {
 	for (int i = 0; i < NUM_JA_PER_SET; ++i) {
 		// trig_vals_channeled[i] = read_channel_intel(trig_val_chan);
 		trig_vals_channeled[i] = read_channel_intel(all_trig_val_chnls[cu_idx]);
+		// printf("CU_id = %d, channel[i] = %ld\n", cu_idx, trig_vals_channeled[i]);
 	}
 
 	int offset = cu_idx * CU_NUM;
