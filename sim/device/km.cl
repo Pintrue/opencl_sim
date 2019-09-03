@@ -2,10 +2,11 @@
 //#define vec
 
 #pragma OPENCL EXTENSION cl_intel_channels : enable
-channel long trig_val_chan __attribute__((depth(6)));
+// channel long trig_val_chan __attribute__((depth(6)));
 
 #define CU_NUM 4
-channel long all_trig_val_chnls[]
+#define NUM_JA_PER_SET 6
+channel long all_trig_val_chnls[CU_NUM] __attribute__((depth(NUM_JA_PER_SET)));
 
 
 __kernel void cosine_int_32(__global const uint* restrict jnt_angles) {
@@ -54,27 +55,38 @@ __kernel void cosine_int_32(__global const uint* restrict jnt_angles) {
 	// obtain work-item index and then the angle at that index
 	// int idx = get_global_id(0);
 
-	for (int idx = 0; idx < 6; ++idx) {
-		uint angle_input = jnt_angles[idx];
+	for (uint cu_idx = 0; cu_idx < CU_NUM; ++cu_idx) {
+		for (uint idx = 0; idx < NUM_JA_PER_SET; ++idx) {
+			uint angle_input = jnt_angles[cu_idx * CU_NUM + idx];
 
-		// mask and shift to obtain LUT index
-		uint angle_idx = (angle_input & 0xFFF00000) >> 20;
+			// mask and shift to obtain LUT index
+			uint angle_idx = (angle_input & 0xFFF00000) >> 20;
 
-		// obtain trigonometry encoding value at that LUT index
-		ulong trig_val_temp = (ulong) grad_table_32[angle_idx] * angle_input + intercept_table_32[angle_idx];
+			// obtain trigonometry encoding value at that LUT index
+			ulong trig_val_temp = (ulong) grad_table_32[angle_idx] * angle_input + intercept_table_32[angle_idx];
 
-		write_channel_intel(trig_val_chan, trig_val_temp);
+			// write_channel_intel(trig_val_chan, trig_val_temp);
+			write_channel_intel(all_trig_val_chnls[cu_idx], trig_val_temp);
+		}
 	}
 	// printf("rad = %u, output[%d] = %lu\n", angle_input, idx, output[idx]);
 }
 
 
+__attribute__((num_compute_units(CU_NUM)))
+
 // aggregate all the trig. values from the block-read channel before moving on
 __kernel void get_pose_by_jnts_int_32(__global ulong* restrict ee_pose) {
-	long trig_vals_channeled[6];
-	for (int i = 0; i < 6; ++i) {
-		trig_vals_channeled[i] = read_channel_intel(trig_val_chan);
+	long trig_vals_channeled[NUM_JA_PER_SET];
+	// int cu_idx = get_compute_id(0);
+	int cu_idx = get_global_id(0);
+
+	for (int i = 0; i < NUM_JA_PER_SET; ++i) {
+		// trig_vals_channeled[i] = read_channel_intel(trig_val_chan);
+		trig_vals_channeled[i] = read_channel_intel(all_trig_val_chnls[cu_idx]);
 	}
+
+	int offset = cu_idx * CU_NUM;
 
 	long d2 = 290;
 	long d3 = 524 * 3581808896;					// l1 * sin(a2)
@@ -82,7 +94,7 @@ __kernel void get_pose_by_jnts_int_32(__global ulong* restrict ee_pose) {
 	long d5 = 1687 * trig_vals_channeled[5];	// l3 * sin(a4)
 
 	// Aggregate the four sections above to obtain Y-coordinate
-	ee_pose[1] = d2 + d3 + d4 + d5;
+	ee_pose[offset + 1] = d2 + d3 + d4 + d5;
 
 	long d6 = 1687 * trig_vals_channeled[2];	// l3 * cos(a4)
 	long d7 = 1064 * trig_vals_channeled[1];	// l2 * cos(a3)
@@ -91,12 +103,12 @@ __kernel void get_pose_by_jnts_int_32(__global ulong* restrict ee_pose) {
 	long d1 = d6 - d7 + d8;
 
 	// Use base angle to obtain X- and Z-coordinates
-	ee_pose[0] = d1 * trig_vals_channeled[3];	// d1 * sin(a1)
-	ee_pose[2] = d1 * trig_vals_channeled[0];	// d1 * cos(a1)
+	ee_pose[offset + 0] = d1 * trig_vals_channeled[3];	// d1 * sin(a1)
+	ee_pose[offset + 2] = d1 * trig_vals_channeled[0];	// d1 * cos(a1)
 
-	ee_pose[3] = d1;
-	ee_pose[4] = trig_vals_channeled[0];
-	ee_pose[5] = trig_vals_channeled[3];
+	ee_pose[offset + 3] = d1;
+	ee_pose[offset + 4] = trig_vals_channeled[0];
+	ee_pose[offset + 5] = trig_vals_channeled[3];
 }
 
 

@@ -139,22 +139,26 @@ matrix_t* resetStateReaching(int rand_angle, int dest_pos, int state_dim, int ac
 	runKM();
 	runFPKM();
 
-	revertPose(output_ee_pose, ee_pos);
+	for (int i = 0; i < COMPUTE_UNIT_NUMBER; ++i) {
+		ulong ee_pose_sel[6];
+		memcpy(ee_pose_sel, i * 6 + output_ee_pose, sizeof(ulong) * 6);
+		// revertPose(output_ee_pose, ee_pos);
+		revertPose(ee_pose_sel, ee_pos);
 
-	cout << "Result from KM kernel execution" << endl;
-	for (int i = 0; i < 3; ++i) {
-		cout << ee_pos[i] << " ";
+		cout << "Result from KM kernel execution" << endl;
+		for (int i = 0; i < 3; ++i) {
+			cout << ee_pos[i] << " ";
+		}
+		cout << endl;
+
+		cout << "-------------------------------" << endl;
+
+		cout << "Result from FPKM kernel execution" << endl;
+		for (int i = 0; i < 3; ++i) {
+			cout << output_fp_ee_pose[i] << " ";
+		}
+		cout << endl;
 	}
-	cout << endl;
-
-	cout << "-------------------------------" << endl;
-
-	cout << "Result from FPKM kernel execution" << endl;
-	for (int i = 0; i < 3; ++i) {
-		cout << output_fp_ee_pose[i] << " ";
-	}
-	cout << endl;
-
 
 
 	// set initial arm pose
