@@ -6,6 +6,7 @@
 
 #define CU_NUM 4
 #define NUM_JA_PER_SET 6
+#define NUM_OUT_POSE_PER_SET 6
 channel long all_trig_val_chnls[CU_NUM] __attribute__((depth(NUM_JA_PER_SET)));
 
 
@@ -87,7 +88,7 @@ __kernel void get_pose_by_jnts_int_32(__global ulong* restrict ee_pose) {
 		// printf("CU_id = %d, channel[i] = %ld\n", cu_idx, trig_vals_channeled[i]);
 	}
 
-	int offset = cu_idx * CU_NUM;
+	int offset = cu_idx * NUM_OUT_POSE_PER_SET;
 
 	long d2 = 290;
 	long d3 = 524 * 3581808896;					// l1 * sin(a2)
