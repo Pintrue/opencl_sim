@@ -4,6 +4,9 @@
 #pragma OPENCL EXTENSION cl_intel_channels : enable
 channel long trig_val_chan __attribute__((depth(6)));
 
+#define CU_NUM 4
+channel long all_trig_val_chnls[]
+
 
 __kernel void cosine_int_32(__global const uint* restrict jnt_angles) {
 
