@@ -146,7 +146,7 @@ matrix_t* resetStateReaching(int rand_angle, int dest_pos, int state_dim, int ac
 		ulong ee_pose_sel[6];
 		memcpy(ee_pose_sel, i * 6 + output_ee_pose, sizeof(ulong) * 6);
 		// revertPose(output_ee_pose, ee_pos);
-		revertPose(ee_pose_sel, ee_pos_temp[3]);
+		revertPose(ee_pose_sel, ee_pos_temp);
 
 		cout << "Result from KM kernel execution" << endl;
 		for (int i = 0; i < 3; ++i) {
