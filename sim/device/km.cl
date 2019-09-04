@@ -54,37 +54,31 @@ __kernel void cosine_int_32(__global const uint* restrict jnt_angles) {
 	}
 	//end init
 
-	// obtain work-item index and then the angle at that index
-	// int idx = get_global_id(0);
-
 	// NOTE: INTEL OPENCL does not support dynamic indexing on channel IDs
-	// for (uint cu_idx = 0; cu_idx < CU_NUM; ++cu_idx) {
-		for (uint idx = 0; idx < NUM_JA_PER_SET; ++idx) {
-			uint angle_input_0 = jnt_angles[idx];
-			uint angle_input_1 = jnt_angles[idx + 6];
-			uint angle_input_2 = jnt_angles[idx + 12];
-			uint angle_input_3 = jnt_angles[idx + 18];
+	for (uint idx = 0; idx < NUM_JA_PER_SET; ++idx) {
+		uint angle_input_0 = jnt_angles[idx];
+		uint angle_input_1 = jnt_angles[idx + 6];
+		uint angle_input_2 = jnt_angles[idx + 12];
+		uint angle_input_3 = jnt_angles[idx + 18];
 
-			// mask and shift to obtain LUT index
-			uint angle_idx_0 = (angle_input_0 & 0xFFF00000) >> 20;
-			uint angle_idx_1 = (angle_input_1 & 0xFFF00000) >> 20;
-			uint angle_idx_2 = (angle_input_2 & 0xFFF00000) >> 20;
-			uint angle_idx_3 = (angle_input_3 & 0xFFF00000) >> 20;
+		// mask and shift to obtain LUT index
+		uint angle_idx_0 = (angle_input_0 & 0xFFF00000) >> 20;
+		uint angle_idx_1 = (angle_input_1 & 0xFFF00000) >> 20;
+		uint angle_idx_2 = (angle_input_2 & 0xFFF00000) >> 20;
+		uint angle_idx_3 = (angle_input_3 & 0xFFF00000) >> 20;
 
-			// obtain trigonometry encoding value at that LUT index
-			ulong trig_val_temp_0 = (ulong) grad_table_32[angle_idx_0] * angle_input_0 + intercept_table_32[angle_idx_0];
-			ulong trig_val_temp_1 = (ulong) grad_table_32[angle_idx_1] * angle_input_1 + intercept_table_32[angle_idx_1];
-			ulong trig_val_temp_2 = (ulong) grad_table_32[angle_idx_2] * angle_input_2 + intercept_table_32[angle_idx_2];
-			ulong trig_val_temp_3 = (ulong) grad_table_32[angle_idx_3] * angle_input_3 + intercept_table_32[angle_idx_3];
+		// obtain trigonometry encoding value at that LUT index
+		ulong trig_val_temp_0 = (ulong) grad_table_32[angle_idx_0] * angle_input_0 + intercept_table_32[angle_idx_0];
+		ulong trig_val_temp_1 = (ulong) grad_table_32[angle_idx_1] * angle_input_1 + intercept_table_32[angle_idx_1];
+		ulong trig_val_temp_2 = (ulong) grad_table_32[angle_idx_2] * angle_input_2 + intercept_table_32[angle_idx_2];
+		ulong trig_val_temp_3 = (ulong) grad_table_32[angle_idx_3] * angle_input_3 + intercept_table_32[angle_idx_3];
 
-			// write_channel_intel(trig_val_chan, trig_val_temp_0);
-			write_channel_intel(all_trig_val_chnls[0], trig_val_temp_0);
-			write_channel_intel(all_trig_val_chnls[1], trig_val_temp_1);
-			write_channel_intel(all_trig_val_chnls[2], trig_val_temp_2);
-			write_channel_intel(all_trig_val_chnls[3], trig_val_temp_3);			
-		}
-	// }
-	// printf("rad = %u, output[%d] = %lu\n", angle_input_0, idx, output[idx]);
+		// write_channel_intel(trig_val_chan, trig_val_temp_0);
+		write_channel_intel(all_trig_val_chnls[0], trig_val_temp_0);
+		write_channel_intel(all_trig_val_chnls[1], trig_val_temp_1);
+		write_channel_intel(all_trig_val_chnls[2], trig_val_temp_2);
+		write_channel_intel(all_trig_val_chnls[3], trig_val_temp_3);			
+	}
 }
 
 
@@ -93,7 +87,6 @@ __attribute__((num_compute_units(CU_NUM)))
 // aggregate all the trig. values from the block-read channel before moving on
 __kernel void get_pose_by_jnts_int_32(__global ulong* restrict ee_pose) {
 	long trig_vals_channeled[NUM_JA_PER_SET];
-	// int cu_idx = get_compute_id(0);
 	int cu_idx = get_global_id(0);
 	
 	switch (cu_idx) {
@@ -102,28 +95,25 @@ __kernel void get_pose_by_jnts_int_32(__global ulong* restrict ee_pose) {
 				trig_vals_channeled[i] = read_channel_intel(all_trig_val_chnls[0]);
 			}
 			break;
+
 		case 1:
 			for (int i = 0; i < NUM_JA_PER_SET; ++i) {
 				trig_vals_channeled[i] = read_channel_intel(all_trig_val_chnls[1]);
 			}
 			break;
+
 		case 2: 
 			for (int i = 0; i < NUM_JA_PER_SET; ++i) {
 				trig_vals_channeled[i] = read_channel_intel(all_trig_val_chnls[2]);
 			}
 			break;
+
 		case 3:
 			for (int i = 0; i < NUM_JA_PER_SET; ++i) {
 				trig_vals_channeled[i] = read_channel_intel(all_trig_val_chnls[3]);
 			}
 			break;
 	}
-
-	// for (int i = 0; i < NUM_JA_PER_SET; ++i) {
-	// 	// trig_vals_channeled[i] = read_channel_intel(trig_val_chan);
-	// 	trig_vals_channeled[i] = read_channel_intel(ch);
-	// 	// printf("CU_id = %d, channel[i] = %ld\n", cu_idx, trig_vals_channeled[i]);
-	// }
 
 	int offset = cu_idx * NUM_OUT_POSE_PER_SET;
 
@@ -151,28 +141,28 @@ __kernel void get_pose_by_jnts_int_32(__global ulong* restrict ee_pose) {
 }
 
 
-__kernel void get_pose_by_jnts(__global const double* restrict radians,
-								__global double* restrict ee_pose) {
-	double link_lengths[3] = {sqrt(3.5*3.5+3.9*3.9), sqrt(1.7*1.7+10.5*10.5), sqrt(3.5*3.5+16.5*16.5)};
+// __kernel void get_pose_by_jnts(__global const double* restrict radians,
+// 								__global double* restrict ee_pose) {
+// 	double link_lengths[3] = {sqrt(3.5*3.5+3.9*3.9), sqrt(1.7*1.7+10.5*10.5), sqrt(3.5*3.5+16.5*16.5)};
 	
-	// y = base_height/2.9;
-	ee_pose[1] = 2.9;
+// 	// y = base_height/2.9;
+// 	ee_pose[1] = 2.9;
 
-	// y += l1*sin(a2) + l2*sin(a3) + l3*sin(a4);
-	#pragma unroll
-	for (int i = 0; i < 3; ++i) {
-		ee_pose[1] += link_lengths[i] * cos(radians[i + 5]);
-	}
+// 	// y += l1*sin(a2) + l2*sin(a3) + l3*sin(a4);
+// 	#pragma unroll
+// 	for (int i = 0; i < 3; ++i) {
+// 		ee_pose[1] += link_lengths[i] * cos(radians[i + 5]);
+// 	}
 	
-	// d1 = -l2*cos(a3);
-	double d1 = -link_lengths[1] * cos(radians[2]);
+// 	// d1 = -l2*cos(a3);
+// 	double d1 = -link_lengths[1] * cos(radians[2]);
 
-	// d1 += l1*cos(a2)+l3*cos(a4);
-	#pragma unroll
-	for (int i = 0; i < 3; i += 2) {
-		d1 += link_lengths[i] * cos(radians[i + 1]);
-	}
+// 	// d1 += l1*cos(a2)+l3*cos(a4);
+// 	#pragma unroll
+// 	for (int i = 0; i < 3; i += 2) {
+// 		d1 += link_lengths[i] * cos(radians[i + 1]);
+// 	}
 
-	ee_pose[0] = d1 * cos(radians[4]);
-	ee_pose[2] = d1 * cos(radians[0]);
-}
+// 	ee_pose[0] = d1 * cos(radians[4]);
+// 	ee_pose[2] = d1 * cos(radians[0]);
+// }
