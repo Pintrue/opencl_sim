@@ -95,10 +95,18 @@ __kernel void get_pose_by_jnts_int_32(__global ulong* restrict ee_pose) {
 	long trig_vals_channeled[NUM_JA_PER_SET];
 	// int cu_idx = get_compute_id(0);
 	int cu_idx = get_global_id(0);
+	channel long ch;
+	
+	switch (cu_idx) {
+		case0: ch = all_trig_val_chnls[0];
+		case1: ch = all_trig_val_chnls[1];
+		case2: ch = all_trig_val_chnls[2];
+		case3: ch = all_trig_val_chnls[3];
+	}
 
 	for (int i = 0; i < NUM_JA_PER_SET; ++i) {
 		// trig_vals_channeled[i] = read_channel_intel(trig_val_chan);
-		trig_vals_channeled[i] = read_channel_intel(all_trig_val_chnls[cu_idx]);
+		trig_vals_channeled[i] = read_channel_intel(ch);
 		// printf("CU_id = %d, channel[i] = %ld\n", cu_idx, trig_vals_channeled[i]);
 	}
 
