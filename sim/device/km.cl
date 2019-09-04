@@ -97,22 +97,22 @@ __kernel void get_pose_by_jnts_int_32(__global ulong* restrict ee_pose) {
 	int cu_idx = get_global_id(0);
 	
 	switch (cu_idx) {
-		case0:
+		case 0:
 			for (int i = 0; i < NUM_JA_PER_SET; ++i) {
 				trig_vals_channeled[i] = read_channel_intel(all_trig_val_chnls[0]);
 			}
 			break;
-		case1:
+		case 1:
 			for (int i = 0; i < NUM_JA_PER_SET; ++i) {
 				trig_vals_channeled[i] = read_channel_intel(all_trig_val_chnls[1]);
 			}
 			break;
-		case2: 
+		case 2: 
 			for (int i = 0; i < NUM_JA_PER_SET; ++i) {
 				trig_vals_channeled[i] = read_channel_intel(all_trig_val_chnls[2]);
 			}
 			break;
-		case3:
+		case 3:
 			for (int i = 0; i < NUM_JA_PER_SET; ++i) {
 				trig_vals_channeled[i] = read_channel_intel(all_trig_val_chnls[3]);
 			}
