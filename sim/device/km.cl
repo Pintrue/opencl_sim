@@ -89,31 +89,31 @@ __kernel void get_pose_by_jnts_int_32(__global ulong* restrict ee_pose) {
 	long trig_vals_channeled[NUM_JA_PER_SET];
 	int cu_idx = get_global_id(0);
 	
-	// switch (cu_idx) {
-	// 	case 0:
+	switch (cu_idx) {
+		case 0:
 			for (int i = 0; i < NUM_JA_PER_SET; ++i) {
-				trig_vals_channeled[i] = read_channel_intel(all_trig_val_chnls[cu_idx]);
+				trig_vals_channeled[i] = read_channel_intel(all_trig_val_chnls[0]);
 			}
-	// 		break;
+			break;
 
-	// 	case 1:
-	// 		for (int i = 0; i < NUM_JA_PER_SET; ++i) {
-	// 			trig_vals_channeled[i] = read_channel_intel(all_trig_val_chnls[1]);
-	// 		}
-	// 		break;
+		case 1:
+			for (int i = 0; i < NUM_JA_PER_SET; ++i) {
+				trig_vals_channeled[i] = read_channel_intel(all_trig_val_chnls[1]);
+			}
+			break;
 
-	// 	case 2: 
-	// 		for (int i = 0; i < NUM_JA_PER_SET; ++i) {
-	// 			trig_vals_channeled[i] = read_channel_intel(all_trig_val_chnls[2]);
-	// 		}
-	// 		break;
+		case 2: 
+			for (int i = 0; i < NUM_JA_PER_SET; ++i) {
+				trig_vals_channeled[i] = read_channel_intel(all_trig_val_chnls[2]);
+			}
+			break;
 
-	// 	case 3:
-	// 		for (int i = 0; i < NUM_JA_PER_SET; ++i) {
-	// 			trig_vals_channeled[i] = read_channel_intel(all_trig_val_chnls[3]);
-	// 		}
-	// 		break;
-	// }
+		case 3:
+			for (int i = 0; i < NUM_JA_PER_SET; ++i) {
+				trig_vals_channeled[i] = read_channel_intel(all_trig_val_chnls[3]);
+			}
+			break;
+	}
 
 	int offset = cu_idx * NUM_OUT_POSE_PER_SET;
 
