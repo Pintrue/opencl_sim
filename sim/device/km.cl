@@ -85,7 +85,7 @@ __kernel void cosine_int_32(__global const uint* restrict jnt_angles) {
 
 
 __attribute__((reqd_work_group_size(CU_NUM,1,1)))
-__attribute__((num_compute_units(CU_NUM)))
+// __attribute__((num_compute_units(CU_NUM)))
 // aggregate all the trig. values from the block-read channel before moving on
 __kernel void get_pose_by_jnts_int_32(__global ulong* restrict ee_pose) {
 	long trig_vals_channeled[NUM_JA_PER_SET];
