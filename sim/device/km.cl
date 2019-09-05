@@ -8,7 +8,7 @@
 #define NUM_JA_PER_SET 6
 #define NUM_OUT_POSE_PER_SET 6
 
-channel long all_trig_val_chnls[CU_NUM] __attribute__((depth(NUM_JA_PER_SET)));
+channel long all_trig_val_chnls[CU_NUM];// __attribute__((depth(NUM_JA_PER_SET)));
 
 __attribute__((num_compute_units(CU_NUM)))
 __kernel void cosine_int_32(__global const uint* restrict jnt_angles) {
