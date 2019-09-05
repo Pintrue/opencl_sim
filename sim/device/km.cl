@@ -95,6 +95,9 @@ __kernel void get_pose_by_jnts_int_32(__global ulong* restrict ee_pose) {
 			for (int i = 0; i < NUM_JA_PER_SET; ++i) {
 				trig_vals_channeled[i] = read_channel_intel(all_trig_val_chnls[0]);
 			}
+			for (int i = 0; i < NUM_JA_PER_SET; ++i) {
+				trig_vals_channeled[i] = read_channel_intel(all_trig_val_chnls[0]);
+			}
 			break;
 
 		case 1:
