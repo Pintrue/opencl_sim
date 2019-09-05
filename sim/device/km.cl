@@ -92,46 +92,46 @@ __kernel void get_pose_by_jnts_int_32(__global ulong* restrict ee_pose) {
 		if (cu_idx == 0) {
 			// for (int i = 0; i < NUM_JA_PER_SET; ++i) {
 				trig_vals_channeled[0] = read_channel_intel(all_trig_val_chnls[0]);
-				trig_vals_channeled[0] = read_channel_intel(all_trig_val_chnls[1]);
-				trig_vals_channeled[0] = read_channel_intel(all_trig_val_chnls[2]);
-				trig_vals_channeled[0] = read_channel_intel(all_trig_val_chnls[3]);
-				trig_vals_channeled[0] = read_channel_intel(all_trig_val_chnls[4]);
-				trig_vals_channeled[0] = read_channel_intel(all_trig_val_chnls[5]);
+				trig_vals_channeled[1] = read_channel_intel(all_trig_val_chnls[0]);
+				trig_vals_channeled[2] = read_channel_intel(all_trig_val_chnls[0]);
+				trig_vals_channeled[3] = read_channel_intel(all_trig_val_chnls[0]);
+				trig_vals_channeled[4] = read_channel_intel(all_trig_val_chnls[0]);
+				trig_vals_channeled[5] = read_channel_intel(all_trig_val_chnls[0]);
 			// }
 			// break;
 		}
 		else if (cu_idx == 1) {
 			// for (int i = 0; i < NUM_JA_PER_SET; ++i) {
-				trig_vals_channeled[1] = read_channel_intel(all_trig_val_chnls[0]);
+				trig_vals_channeled[0] = read_channel_intel(all_trig_val_chnls[1]);
 				trig_vals_channeled[1] = read_channel_intel(all_trig_val_chnls[1]);
-				trig_vals_channeled[1] = read_channel_intel(all_trig_val_chnls[2]);
-				trig_vals_channeled[1] = read_channel_intel(all_trig_val_chnls[3]);
-				trig_vals_channeled[1] = read_channel_intel(all_trig_val_chnls[4]);
-				trig_vals_channeled[1] = read_channel_intel(all_trig_val_chnls[5]);
+				trig_vals_channeled[2] = read_channel_intel(all_trig_val_chnls[1]);
+				trig_vals_channeled[3] = read_channel_intel(all_trig_val_chnls[1]);
+				trig_vals_channeled[4] = read_channel_intel(all_trig_val_chnls[1]);
+				trig_vals_channeled[5] = read_channel_intel(all_trig_val_chnls[1]);
 
 			// }
 			// break;
 		}
 		else if (cu_idx == 2) { 
 			// for (int i = 0; i < NUM_JA_PER_SET; ++i) {
-				trig_vals_channeled[2] = read_channel_intel(all_trig_val_chnls[0]);
-				trig_vals_channeled[2] = read_channel_intel(all_trig_val_chnls[1]);
+				trig_vals_channeled[0] = read_channel_intel(all_trig_val_chnls[2]);
+				trig_vals_channeled[1] = read_channel_intel(all_trig_val_chnls[2]);
 				trig_vals_channeled[2] = read_channel_intel(all_trig_val_chnls[2]);
-				trig_vals_channeled[2] = read_channel_intel(all_trig_val_chnls[3]);
-				trig_vals_channeled[2] = read_channel_intel(all_trig_val_chnls[4]);
-				trig_vals_channeled[2] = read_channel_intel(all_trig_val_chnls[5]);
+				trig_vals_channeled[3] = read_channel_intel(all_trig_val_chnls[2]);
+				trig_vals_channeled[4] = read_channel_intel(all_trig_val_chnls[2]);
+				trig_vals_channeled[5] = read_channel_intel(all_trig_val_chnls[2]);
 
 			// }
 			// break;
 		}
 		else if (cu_idx == 3) {
 			// for (int i = 0; i < NUM_JA_PER_SET; ++i) {
-				trig_vals_channeled[3] = read_channel_intel(all_trig_val_chnls[0]);
-				trig_vals_channeled[3] = read_channel_intel(all_trig_val_chnls[1]);
-				trig_vals_channeled[3] = read_channel_intel(all_trig_val_chnls[2]);
+				trig_vals_channeled[0] = read_channel_intel(all_trig_val_chnls[3]);
+				trig_vals_channeled[1] = read_channel_intel(all_trig_val_chnls[3]);
+				trig_vals_channeled[2] = read_channel_intel(all_trig_val_chnls[3]);
 				trig_vals_channeled[3] = read_channel_intel(all_trig_val_chnls[3]);
-				trig_vals_channeled[3] = read_channel_intel(all_trig_val_chnls[4]);
-				trig_vals_channeled[3] = read_channel_intel(all_trig_val_chnls[5]);
+				trig_vals_channeled[4] = read_channel_intel(all_trig_val_chnls[3]);
+				trig_vals_channeled[5] = read_channel_intel(all_trig_val_chnls[3]);
 
 			// }
 			// break;
