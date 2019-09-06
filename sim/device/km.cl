@@ -55,31 +55,67 @@ __kernel void cosine_int_32(__global const uint* restrict jnt_angles) {
 	}
 	//end init
 
-	#pragma unroll
+	// #pragma unroll
 	// NOTE: INTEL OPENCL does not support dynamic indexing on channel IDs
-	for (uint idx = 0; idx < NUM_JA_PER_SET; ++idx) {
-		uint angle_input_0 = jnt_angles[idx];
-		uint angle_input_1 = jnt_angles[idx + 6];
-		uint angle_input_2 = jnt_angles[idx + 12];
-		uint angle_input_3 = jnt_angles[idx + 18];
+	// for (uint idx = 0; idx < NUM_JA_PER_SET; ++idx) {
+	// 	uint angle_input_0 = jnt_angles[idx];
+	// 	uint angle_input_1 = jnt_angles[idx + 6];
+	// 	uint angle_input_2 = jnt_angles[idx + 12];
+	// 	uint angle_input_3 = jnt_angles[idx + 18];
 
-		// mask and shift to obtain LUT index
-		uint angle_idx_0 = (angle_input_0 & 0xFFF00000) >> 20;
-		uint angle_idx_1 = (angle_input_1 & 0xFFF00000) >> 20;
-		uint angle_idx_2 = (angle_input_2 & 0xFFF00000) >> 20;
-		uint angle_idx_3 = (angle_input_3 & 0xFFF00000) >> 20;
+	// 	// mask and shift to obtain LUT index
+	// 	uint angle_idx_0 = (angle_input_0 & 0xFFF00000) >> 20;
+	// 	uint angle_idx_1 = (angle_input_1 & 0xFFF00000) >> 20;
+	// 	uint angle_idx_2 = (angle_input_2 & 0xFFF00000) >> 20;
+	// 	uint angle_idx_3 = (angle_input_3 & 0xFFF00000) >> 20;
 
-		// obtain trigonometry encoding value at that LUT index
-		ulong trig_val_temp_0 = (ulong) grad_table_32[angle_idx_0] * angle_input_0 + intercept_table_32[angle_idx_0];
-		ulong trig_val_temp_1 = (ulong) grad_table_32[angle_idx_1] * angle_input_1 + intercept_table_32[angle_idx_1];
-		ulong trig_val_temp_2 = (ulong) grad_table_32[angle_idx_2] * angle_input_2 + intercept_table_32[angle_idx_2];
-		ulong trig_val_temp_3 = (ulong) grad_table_32[angle_idx_3] * angle_input_3 + intercept_table_32[angle_idx_3];
+	// 	// obtain trigonometry encoding value at that LUT index
+	// 	ulong trig_val_temp_0 = (ulong) grad_table_32[angle_idx_0] * angle_input_0 + intercept_table_32[angle_idx_0];
+	// 	ulong trig_val_temp_1 = (ulong) grad_table_32[angle_idx_1] * angle_input_1 + intercept_table_32[angle_idx_1];
+	// 	ulong trig_val_temp_2 = (ulong) grad_table_32[angle_idx_2] * angle_input_2 + intercept_table_32[angle_idx_2];
+	// 	ulong trig_val_temp_3 = (ulong) grad_table_32[angle_idx_3] * angle_input_3 + intercept_table_32[angle_idx_3];
 
-		// write_channel_intel(trig_val_chan, trig_val_temp_0);
-		write_channel_intel(all_trig_val_chnls[0], trig_val_temp_0);
-		write_channel_intel(all_trig_val_chnls[1], trig_val_temp_1);
-		write_channel_intel(all_trig_val_chnls[2], trig_val_temp_2);
-		write_channel_intel(all_trig_val_chnls[3], trig_val_temp_3);
+	// 	// write_channel_intel(trig_val_chan, trig_val_temp_0);
+	// 	write_channel_intel(all_trig_val_chnls[0], trig_val_temp_0);
+	// 	write_channel_intel(all_trig_val_chnls[1], trig_val_temp_1);
+	// 	write_channel_intel(all_trig_val_chnls[2], trig_val_temp_2);
+	// 	write_channel_intel(all_trig_val_chnls[3], trig_val_temp_3);
+	// }
+
+	#pragma unroll
+	for (int i = 0; i < CU_NUM; ++i) {
+		uint offset = i * CU_NUM;
+
+		uint cu_input_0 = jnt_angles[offset];
+		uint cu_input_1 = jnt_angles[offset + 1];
+		uint cu_input_2 = jnt_angles[offset + 2];
+		uint cu_input_3 = jnt_angles[offset + 3];
+		uint cu_input_4 = jnt_angles[offset + 4];
+		uint cu_input_5 = jnt_angles[offset + 5];
+
+		// mask and shift to obtain LUT indices
+		uint cu_angle_idx_0 = (cu_input_0 & 0xFFF00000) >> 20;
+		uint cu_angle_idx_1 = (cu_input_1 & 0xFFF00000) >> 20;
+		uint cu_angle_idx_2 = (cu_input_2 & 0xFFF00000) >> 20;
+		uint cu_angle_idx_3 = (cu_input_3 & 0xFFF00000) >> 20;
+		uint cu_angle_idx_4 = (cu_input_4 & 0xFFF00000) >> 20;
+		uint cu_angle_idx_5 = (cu_input_5 & 0xFFF00000) >> 20;
+
+		// obtain trig encoding value at these LUT indices
+		ulong cu_trig_val_temp_0 = (ulong) grad_table_32[cu_angle_idx_0] * cu_input_0 + intercept_table_32[cu_angle_idx_0];
+		ulong cu_trig_val_temp_1 = (ulong) grad_table_32[cu_angle_idx_1] * cu_input_1 + intercept_table_32[cu_angle_idx_1];
+		ulong cu_trig_val_temp_2 = (ulong) grad_table_32[cu_angle_idx_2] * cu_input_2 + intercept_table_32[cu_angle_idx_2];
+		ulong cu_trig_val_temp_3 = (ulong) grad_table_32[cu_angle_idx_3] * cu_input_3 + intercept_table_32[cu_angle_idx_3];
+		ulong cu_trig_val_temp_4 = (ulong) grad_table_32[cu_angle_idx_4] * cu_input_4 + intercept_table_32[cu_angle_idx_4];
+		ulong cu_trig_val_temp_5 = (ulong) grad_table_32[cu_angle_idx_5] * cu_input_5 + intercept_table_32[cu_angle_idx_5];
+
+		// write to channel
+		write_channel_intel(all_trig_val_chnls[i], cu_trig_val_temp_0);
+		write_channel_intel(all_trig_val_chnls[i], cu_trig_val_temp_1);
+		write_channel_intel(all_trig_val_chnls[i], cu_trig_val_temp_2);
+		write_channel_intel(all_trig_val_chnls[i], cu_trig_val_temp_3);
+		write_channel_intel(all_trig_val_chnls[i], cu_trig_val_temp_4);
+		write_channel_intel(all_trig_val_chnls[i], cu_trig_val_temp_5);
 	}
 }
 
