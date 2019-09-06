@@ -55,7 +55,7 @@ __kernel void cosine_int_32(__global const uint* restrict jnt_angles) {
 	}
 	//end init
 
-	#pragma unroll
+	// #pragma unroll
 	// NOTE: INTEL OPENCL does not support dynamic indexing on channel IDs
 	for (uint idx = 0; idx < NUM_JA_PER_SET; ++idx) {
 		uint angle_input_0 = jnt_angles[idx];
