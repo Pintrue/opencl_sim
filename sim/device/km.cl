@@ -84,7 +84,7 @@ __kernel void cosine_int_32(__global const uint* restrict jnt_angles) {
 
 	#pragma unroll
 	for (int i = 0; i < CU_NUM; ++i) {
-		uint offset = i * CU_NUM;
+		uint offset = i * NUM_JA_PER_SET;
 
 		uint cu_input_0 = jnt_angles[offset];
 		uint cu_input_1 = jnt_angles[offset + 1];
