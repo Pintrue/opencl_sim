@@ -9,7 +9,7 @@
 #define NUM_OUT_POSE_PER_SET 6
 
 
-channel long all_trig_val_chnls[CU_NUM] __attribute__((depth(NUM_JA_PER_SET)));
+channel ulong all_trig_val_chnls[CU_NUM] __attribute__((depth(NUM_JA_PER_SET)));
 
 
 __kernel void cosine_int_32(__global const uint* restrict jnt_angles) {
@@ -83,7 +83,7 @@ __kernel void cosine_int_32(__global const uint* restrict jnt_angles) {
 	// }
 
 	#pragma unroll
-	for (int i = 0; i < CU_NUM; ++i) {
+	for (int i = 0; i < (int)CU_NUM; ++i) {
 		uint offset = i * NUM_JA_PER_SET;
 
 		uint cu_input_0 = jnt_angles[offset];
@@ -124,30 +124,30 @@ __attribute__((reqd_work_group_size(CU_NUM,1,1)))
 // __attribute__((num_compute_units(CU_NUM)))
 // aggregate all the trig. values from the block-read channel before moving on
 __kernel void get_pose_by_jnts_int_32(__global ulong* restrict ee_pose) {
-	long trig_vals_channeled[NUM_JA_PER_SET];
+	ulong trig_vals_channeled[NUM_JA_PER_SET];
 	int cu_idx = get_global_id(0);
 	
 	switch (cu_idx) {
 		case 0:
-			for (int i = 0; i < NUM_JA_PER_SET; ++i) {
+			for (int i = 0; i < (int)NUM_JA_PER_SET; ++i) {
 				trig_vals_channeled[i] = read_channel_intel(all_trig_val_chnls[0]);
 			}
 			break;
 
 		case 1:
-			for (int i = 0; i < NUM_JA_PER_SET; ++i) {
+			for (int i = 0; i < (int)NUM_JA_PER_SET; ++i) {
 				trig_vals_channeled[i] = read_channel_intel(all_trig_val_chnls[1]);
 			}
 			break;
 
 		case 2: 
-			for (int i = 0; i < NUM_JA_PER_SET; ++i) {
+			for (int i = 0; i < (int)NUM_JA_PER_SET; ++i) {
 				trig_vals_channeled[i] = read_channel_intel(all_trig_val_chnls[2]);
 			}
 			break;
 
 		default:
-			for (int i = 0; i < NUM_JA_PER_SET; ++i) {
+			for (int i = 0; i < (int)NUM_JA_PER_SET; ++i) {
 				trig_vals_channeled[i] = read_channel_intel(all_trig_val_chnls[3]);
 			}
 			break;
