@@ -102,20 +102,58 @@ __kernel void cosine_int_32(__global const uint* restrict jnt_angles) {
 		uint cu_angle_idx_5 = (cu_input_5 & 0xFFF00000) >> 20;
 
 		// obtain trig encoding value at these LUT indices
-		ulong cu_trig_val_temp_0 = (ulong) grad_table_32[cu_angle_idx_0] * cu_input_0 + intercept_table_32[cu_angle_idx_0];
-		ulong cu_trig_val_temp_1 = (ulong) grad_table_32[cu_angle_idx_1] * cu_input_1 + intercept_table_32[cu_angle_idx_1];
-		ulong cu_trig_val_temp_2 = (ulong) grad_table_32[cu_angle_idx_2] * cu_input_2 + intercept_table_32[cu_angle_idx_2];
-		ulong cu_trig_val_temp_3 = (ulong) grad_table_32[cu_angle_idx_3] * cu_input_3 + intercept_table_32[cu_angle_idx_3];
-		ulong cu_trig_val_temp_4 = (ulong) grad_table_32[cu_angle_idx_4] * cu_input_4 + intercept_table_32[cu_angle_idx_4];
-		ulong cu_trig_val_temp_5 = (ulong) grad_table_32[cu_angle_idx_5] * cu_input_5 + intercept_table_32[cu_angle_idx_5];
+		ulong cu_trig_val_temps[6];
+		cu_trig_val_temps[0] = (ulong) grad_table_32[cu_angle_idx_0] * cu_input_0 + intercept_table_32[cu_angle_idx_0];
+		cu_trig_val_temps[1] = (ulong) grad_table_32[cu_angle_idx_1] * cu_input_1 + intercept_table_32[cu_angle_idx_1];
+		cu_trig_val_temps[2] = (ulong) grad_table_32[cu_angle_idx_2] * cu_input_2 + intercept_table_32[cu_angle_idx_2];
+		cu_trig_val_temps[3] = (ulong) grad_table_32[cu_angle_idx_3] * cu_input_3 + intercept_table_32[cu_angle_idx_3];
+		cu_trig_val_temps[4] = (ulong) grad_table_32[cu_angle_idx_4] * cu_input_4 + intercept_table_32[cu_angle_idx_4];
+		cu_trig_val_temps[5] = (ulong) grad_table_32[cu_angle_idx_5] * cu_input_5 + intercept_table_32[cu_angle_idx_5];
 
 		// write to channel
-		write_channel_intel(all_trig_val_chnls[i], cu_trig_val_temp_0);
-		write_channel_intel(all_trig_val_chnls[i], cu_trig_val_temp_1);
-		write_channel_intel(all_trig_val_chnls[i], cu_trig_val_temp_2);
-		write_channel_intel(all_trig_val_chnls[i], cu_trig_val_temp_3);
-		write_channel_intel(all_trig_val_chnls[i], cu_trig_val_temp_4);
-		write_channel_intel(all_trig_val_chnls[i], cu_trig_val_temp_5);
+		switch (i) {
+			case 0:
+				for (int j = 0; j < NUM_JA_PER_SET; ++j) {
+					write_channel_intel(all_trig_val_chnls[0], cu_trig_val_temps[j]);
+				}
+				break;
+
+			case 1:
+				for (int j = 0; j < NUM_JA_PER_SET; ++j) {
+					write_channel_intel(all_trig_val_chnls[1], cu_trig_val_temps[j]);
+				}
+				break;
+
+			case 2:
+				for (int j = 0; j < NUM_JA_PER_SET; ++j) {
+					write_channel_intel(all_trig_val_chnls[2], cu_trig_val_temps[j]);
+				}
+				break;
+
+			case 3:
+				for (int j = 0; j < NUM_JA_PER_SET; ++j) {
+					write_channel_intel(all_trig_val_chnls[3], cu_trig_val_temps[j]);
+				}
+				break;
+
+			case 4:
+				for (int j = 0; j < NUM_JA_PER_SET; ++j) {
+					write_channel_intel(all_trig_val_chnls[4], cu_trig_val_temps[j]);
+				}
+				break;
+
+			case 5:
+				for (int j = 0; j < NUM_JA_PER_SET; ++j) {
+					write_channel_intel(all_trig_val_chnls[5], cu_trig_val_temps[j]);
+				}
+				break;
+		}
+		// write_channel_intel(all_trig_val_chnls[i], cu_trig_val_temp_0);
+		// write_channel_intel(all_trig_val_chnls[i], cu_trig_val_temp_1);
+		// write_channel_intel(all_trig_val_chnls[i], cu_trig_val_temp_2);
+		// write_channel_intel(all_trig_val_chnls[i], cu_trig_val_temp_3);
+		// write_channel_intel(all_trig_val_chnls[i], cu_trig_val_temp_4);
+		// write_channel_intel(all_trig_val_chnls[i], cu_trig_val_temp_5);
 	}
 }
 
@@ -146,7 +184,7 @@ __kernel void get_pose_by_jnts_int_32(__global ulong* restrict ee_pose) {
 			}
 			break;
 
-		default:
+		case 3:
 			for (int i = 0; i < (int)NUM_JA_PER_SET; ++i) {
 				trig_vals_channeled[i] = read_channel_intel(all_trig_val_chnls[3]);
 			}
