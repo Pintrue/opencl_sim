@@ -14,8 +14,8 @@ channel ulong all_trig_val_chnls[CU_NUM] __attribute__((depth(NUM_JA_PER_SET)));
 
 __kernel void cosine_int_32(__global const uint* restrict jnt_angles) {
 
-	__local char grad_table_32[4096][16];
-	__local long intercept_table_32[4096][16];
+	__local char grad_table_32[4096];
+	__local long intercept_table_32[4096];
 
 	// init the LUT of integer-encoded cosine function
 	#pragma unroll 2
