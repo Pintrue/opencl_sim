@@ -14,8 +14,8 @@ channel ulong all_trig_val_chnls[CU_NUM] __attribute__((depth(NUM_JA_PER_SET)));
 
 __kernel void cosine_int_32(__global const uint* restrict jnt_angles) {
 
-	__local char grad_table_32[4096];
-	__local long intercept_table_32[4096];
+	__local char grad_table_32[4096][16];
+	__local long intercept_table_32[4096][16];
 
 	// init the LUT of integer-encoded cosine function
 	#pragma unroll 2
@@ -24,13 +24,13 @@ __kernel void cosine_int_32(__global const uint* restrict jnt_angles) {
 		intercept_table_32[i] = 287708254;
 	}
 
-	#pragma unroll 4
+	#pragma unroll 2
 	for (uint i = 351; i < 819; ++i) {
 		grad_table_32[i] = 1;
 		intercept_table_32[i] = -368140054;
 	}
 
-	#pragma unroll 4
+	#pragma unroll 2
 	for (uint i = 819; i < 1872; ++i) {
 		grad_table_32[i] = 3;
 		intercept_table_32[i] = -2262381335;
@@ -42,7 +42,7 @@ __kernel void cosine_int_32(__global const uint* restrict jnt_angles) {
 		intercept_table_32[i] = 1717986918;
 	}
 
-	#pragma unroll 4
+	#pragma unroll 2
 	for (uint i = 2457; i < 3042; ++i) {
 		grad_table_32[i] = -1;
 		intercept_table_32[i] = 6871947672;
