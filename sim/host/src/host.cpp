@@ -325,15 +325,15 @@ void initInput() {
 
 
 	for (int cu_idx = 0; cu_idx < COMPUTE_UNIT_NUMBER; ++cu_idx) {
-		int offset = cu_idx * 
-		input_radians[0] = ja_0;
-		input_radians[1] = atan2(3.5, 3.9);
-		input_radians[2] = atan2(1.70, 10.50) + ja_1;
-		input_radians[3] = atan2(3.50, 16.50) - ja_2 - ja_1;
-		input_radians[4] = ja_0 - M_PI_2;
-		input_radians[5] = input_radians[1] - M_PI_2;
-		input_radians[6] = input_radians[2] - M_PI_2;
-		input_radians[7] = input_radians[3] - M_PI_2;
+		int offset = cu_idx * NUMBER_OF_ELEMS_FP;
+		input_radians[offset + 0] = ja_0;
+		input_radians[offset + 1] = atan2(3.5, 3.9);
+		input_radians[offset + 2] = atan2(1.70, 10.50) + ja_1;
+		input_radians[offset + 3] = atan2(3.50, 16.50) - ja_2 - ja_1;
+		input_radians[offset + 4] = ja_0 - M_PI_2;
+		input_radians[offset + 5] = input_radians[offset + 1] - M_PI_2;
+		input_radians[offset + 6] = input_radians[offset + 2] - M_PI_2;
+		input_radians[offset + 7] = input_radians[offset + 3] - M_PI_2;
 	}
 	// printf("After conversion:\n");
 	// for (int i = 0; i < NUMBER_OF_ELEMS; ++i) {
