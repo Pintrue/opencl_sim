@@ -255,7 +255,7 @@ bool initOpencl() {
 	// input_trig_vals_buf = clCreateBuffer(context, CL_MEM_READ_ONLY, NUMBER_OF_ELEMS * sizeof(long), NULL, &err);
 	// checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'input_trig_vals_buf' failed");
 
-	input_radians_buf = clCreateBuffer(context, CL_MEM_READ_ONLY, 8 * sizeof(double), NULL, &err);
+	input_radians_buf = clCreateBuffer(context, CL_MEM_READ_ONLY, NUMBER_OF_ELEMS_FP * sizeof(double) * COMPUTE_UNIT_NUMBER, NULL, &err);
 	checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'input_radians_buf' failed");
 
 
@@ -266,7 +266,7 @@ bool initOpencl() {
 	output_ee_pose_buf = clCreateBuffer(context, CL_MEM_WRITE_ONLY, 6 * sizeof(ulong) * COMPUTE_UNIT_NUMBER, NULL, &err);
 	checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'output_ee_pose_buf' failed");
 
-	output_fp_ee_pose_buf = clCreateBuffer(context, CL_MEM_WRITE_ONLY, 3 * sizeof(double), NULL, &err);
+	output_fp_ee_pose_buf = clCreateBuffer(context, CL_MEM_WRITE_ONLY, 3 * sizeof(double) * COMPUTE_UNIT_NUMBER, NULL, &err);
 	checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'output_fp_ee_pose_buf' failed");
 
 	printf("FINISH INIT.\n");
@@ -278,8 +278,8 @@ void initInput() {
 	input_jnt_angles = new uint[NUMBER_OF_ELEMS * COMPUTE_UNIT_NUMBER];
 	// output_trig_vals = new ulong[NUMBER_OF_ELEMS];
 
-	input_radians = new double[8];
-	output_fp_ee_pose = new double[3];
+	input_radians = new double[NUMBER_OF_ELEMS_FP * COMPUTE_UNIT_NUMBER];
+	output_fp_ee_pose = new double[3 * COMPUTE_UNIT_NUMBER];
 
 	// Randomize the input elements
 	double ja_0, ja_1, ja_2;		// cosine angle radians
@@ -324,15 +324,17 @@ void initInput() {
 	}
 
 
-	input_radians[0] = ja_0;
-	input_radians[1] = atan2(3.5, 3.9);
-	input_radians[2] = atan2(1.70, 10.50) + ja_1;
-	input_radians[3] = atan2(3.50, 16.50) - ja_2 - ja_1;
-	input_radians[4] = ja_0 - M_PI_2;
-	input_radians[5] = input_radians[1] - M_PI_2;
-	input_radians[6] = input_radians[2] - M_PI_2;
-	input_radians[7] = input_radians[3] - M_PI_2;
-
+	for (int cu_idx = 0; cu_idx < COMPUTE_UNIT_NUMBER; ++cu_idx) {
+		int offset = cu_idx * 
+		input_radians[0] = ja_0;
+		input_radians[1] = atan2(3.5, 3.9);
+		input_radians[2] = atan2(1.70, 10.50) + ja_1;
+		input_radians[3] = atan2(3.50, 16.50) - ja_2 - ja_1;
+		input_radians[4] = ja_0 - M_PI_2;
+		input_radians[5] = input_radians[1] - M_PI_2;
+		input_radians[6] = input_radians[2] - M_PI_2;
+		input_radians[7] = input_radians[3] - M_PI_2;
+	}
 	// printf("After conversion:\n");
 	// for (int i = 0; i < NUMBER_OF_ELEMS; ++i) {
 	// 	printf("ja[%d] = %u\n", i, input_jnt_angles[i]);
@@ -513,7 +515,7 @@ void runFPKM() {
 	// Enqueue write commands to the input buffer
 	cl_event write_events[1];
 	err = clEnqueueWriteBuffer(command_queues[2], input_radians_buf, CL_FALSE,
-			0, 8 * sizeof(double), input_radians, 0, NULL, &write_events[0]);
+			0, NUMBER_OF_ELEMS_FP * sizeof(double) * COMPUTE_UNIT_NUMBER, input_radians, 0, NULL, &write_events[0]);
 	checkStatus(err, __FILE__, __LINE__, "'clEnqueueWriteBuffer()' for 'input_radians_buf' failed");
 
 	// Set kernel argument
@@ -528,14 +530,14 @@ void runFPKM() {
 	checkStatus(err, __FILE__, __LINE__, "'clSetKernelArg()' failed");
 
 	// Launch the kernel
-	const size_t global_work_size = 1;
+	const size_t global_work_size = COMPUTE_UNIT_NUMBER;
 	err = clEnqueueNDRangeKernel(command_queues[2], fp_km_kernel, 1, NULL,
 			&global_work_size, NULL, 1, write_events, &kernel_event);
 	checkStatus(err, __FILE__, __LINE__, "'clEnqueueNDRangeKernel()' failed");
 
 	// Enqueue read commands on the output buffer
 	err = clEnqueueReadBuffer(command_queues[2], output_fp_ee_pose_buf, CL_FALSE, 0,
-			3 * sizeof(double), output_fp_ee_pose, 1, &kernel_event,
+			3 * sizeof(double) * COMPUTE_UNIT_NUMBER, output_fp_ee_pose, 1, &kernel_event,
 			&finish_event);
 	checkStatus(err, __FILE__, __LINE__, "'clEnqueueReadBuffer()' failed");
 

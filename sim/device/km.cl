@@ -7,6 +7,8 @@
 #define CU_NUM 16
 #define NUM_JA_PER_SET 6
 #define NUM_OUT_POSE_PER_SET 6
+#define NUM_RAD_PER_SET 8
+#define NUM_OUT_POSE_PER_SET_FP 3
 
 
 channel ulong all_trig_val_chnls[CU_NUM] __attribute__((depth(NUM_JA_PER_SET)));
@@ -264,28 +266,36 @@ __kernel void get_pose_by_jnts_int_32(__global ulong* restrict ee_pose) {
 }
 
 
-// __kernel void get_pose_by_jnts(__global const double* restrict radians,
-// 								__global double* restrict ee_pose) {
-// 	double link_lengths[3] = {sqrt(3.5*3.5+3.9*3.9), sqrt(1.7*1.7+10.5*10.5), sqrt(3.5*3.5+16.5*16.5)};
+__kernel void get_pose_by_jnts(__global const double* restrict radians,
+								__global double* restrict ee_pose) {
+
+	int cu_idx = get_global_id(0);
+	int radians_offset = cu_idx * NUM_RAD_PER_SET;
+	int out_ee_pose_offset = cu_idx * NUM_OUT_POSE_PER_SET_FP;
+
+	double link_lengths[3] = {sqrt(3.5*3.5+3.9*3.9), sqrt(1.7*1.7+10.5*10.5), sqrt(3.5*3.5+16.5*16.5)};
 	
-// 	// y = base_height/2.9;
-// 	ee_pose[1] = 2.9;
+	// y = base_height/2.9;
+	// ee_pose[1] = 2.9;
+	double y = 2.9;
 
-// 	// y += l1*sin(a2) + l2*sin(a3) + l3*sin(a4);
-// 	#pragma unroll
-// 	for (int i = 0; i < 3; ++i) {
-// 		ee_pose[1] += link_lengths[i] * cos(radians[i + 5]);
-// 	}
+	// y += l1*sin(a2) + l2*sin(a3) + l3*sin(a4);
 	
-// 	// d1 = -l2*cos(a3);
-// 	double d1 = -link_lengths[1] * cos(radians[2]);
+	for (int i = 0; i < 3; ++i) {
+		y += link_lengths[i] * cos(radians[radians_offset + i + 5]);
+	}
 
-// 	// d1 += l1*cos(a2)+l3*cos(a4);
-// 	#pragma unroll
-// 	for (int i = 0; i < 3; i += 2) {
-// 		d1 += link_lengths[i] * cos(radians[i + 1]);
-// 	}
+	
+	// d1 = -l2*cos(a3);
+	double d1 = -link_lengths[1] * cos(radians[radians_offset + 2]);
 
-// 	ee_pose[0] = d1 * cos(radians[4]);
-// 	ee_pose[2] = d1 * cos(radians[0]);
-// }
+	
+	// d1 += l1*cos(a2)+l3*cos(a4);
+	for (int i = 0; i < 3; i += 2) {
+		d1 += link_lengths[i] * cos(radians[radians_offset + i + 1]);
+	}
+
+	ee_pose[out_ee_pose_offset] = d1 * cos(radians[radians_offset + 4]);
+	ee_pose[out_ee_pose_offset + 1] = y;
+	ee_pose[out_ee_pose_offset + 2] = d1 * cos(radians[radians_offset]);
+}
