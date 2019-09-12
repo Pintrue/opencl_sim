@@ -286,7 +286,7 @@ __kernel void get_pose_by_jnts_int_32(__global ulong* restrict ee_pose) {
 
 
 __attribute__((reqd_work_group_size(1, 1, 1)))
-__attribute__((num_compute_units(4)))
+__attribute__((num_compute_units(2)))
 __kernel void get_pose_by_jnts(__global const double* restrict radians,
 								__global double* restrict ee_pose) {
 
