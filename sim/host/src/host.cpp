@@ -530,7 +530,7 @@ void runFPKM() {
 	checkStatus(err, __FILE__, __LINE__, "'clSetKernelArg()' failed");
 
 	// Launch the kernel
-	const size_t global_work_size = COMPUTE_UNIT_NUMBER;
+	const size_t global_work_size = 1;
 	const size_t local_work_size = 1;
 	err = clEnqueueNDRangeKernel(command_queues[2], fp_km_kernel, 1, NULL,
 			&global_work_size, &local_work_size, 1, write_events, &kernel_event);

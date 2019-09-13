@@ -5,6 +5,7 @@
 // channel long trig_val_chan __attribute__((depth(6)));
 
 #define CU_NUM 16
+#define FP_SIMUL_SET 16
 #define NUM_JA_PER_SET 6
 #define NUM_OUT_POSE_PER_SET 6
 #define NUM_RAD_PER_SET 8
@@ -285,12 +286,12 @@ __kernel void get_pose_by_jnts_int_32(__global ulong* restrict ee_pose) {
 }
 
 
-__attribute__((reqd_work_group_size(1, 1, 1)))
-__attribute__((num_compute_units(8)))
+// __attribute__((reqd_work_group_size(1, 1, 1)))
 __kernel void get_pose_by_jnts(__global const double* restrict radians,
 								__global double* restrict ee_pose) {
 
-	int cu_idx = get_global_id(0);
+	// int cu_idx = get_global_id(0);
+	for (int cu_idx = 0; cu_idx < FP_SIMUL_SET; ++cu_idx) {
 	int radians_offset = cu_idx * NUM_RAD_PER_SET;
 	int out_ee_pose_offset = cu_idx * NUM_OUT_POSE_PER_SET_FP;
 
