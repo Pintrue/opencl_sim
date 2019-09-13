@@ -531,8 +531,9 @@ void runFPKM() {
 
 	// Launch the kernel
 	const size_t global_work_size = COMPUTE_UNIT_NUMBER;
+	const size_t local_work_size = 1;
 	err = clEnqueueNDRangeKernel(command_queues[2], fp_km_kernel, 1, NULL,
-			&global_work_size, NULL, 1, write_events, &kernel_event);
+			&global_work_size, &local_work_size, 1, write_events, &kernel_event);
 	checkStatus(err, __FILE__, __LINE__, "'clEnqueueNDRangeKernel()' failed");
 
 	// Enqueue read commands on the output buffer
