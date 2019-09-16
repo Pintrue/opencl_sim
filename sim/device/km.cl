@@ -255,15 +255,17 @@ __kernel void get_pose_by_jnts(__global const double* restrict radians,
 	}
 	
 	// d1 = -l2*cos(a3);
-	double d1 = -link_lengths[1] * cos(radians[radians_offset + 2]);
-
+	double d1_subterms[3];
 	
-	// d1 += l1*cos(a2)+l3*cos(a4);
-	for (int i = 0; i < 3; i += 2) {
-		d1 += link_lengths[i] * cos(radians[radians_offset + i + 1]);
+	#pragma unroll 3
+	for (int i = 0; i < 3; ++i) {
+		d1_subterms[i] = link_lengths[i] * cos(radians[radians_offset + i + 1]);
 	}
+	
+	double d1 = d1_subterms[0] - d1_subterms[1] + d1_subterms[2]; 
+
 
 	ee_pose[out_ee_pose_offset] = d1 * cos(radians[radians_offset + 4]);
-	ee_pose[out_ee_pose_offset + 1] = y;
+	ee_pose[out_ee_pose_offset + 1] = 2.9 + y_subterms[0] + y_subterms[1] + y_subterms[2];
 	ee_pose[out_ee_pose_offset + 2] = d1 * cos(radians[radians_offset]);
 }
