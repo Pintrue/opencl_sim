@@ -10,6 +10,7 @@
 #define NUM_OUT_POSE_PER_SET 6
 #define NUM_RAD_PER_SET 8
 #define NUM_OUT_POSE_PER_SET_FP 3
+#define FP_INPUT_BUFFER_SIZE (FP_SIMUL_SET * NUM_RAD_PER_SET)
 
 
 channel ulong all_trig_val_chnls[CU_NUM] __attribute__((depth(NUM_JA_PER_SET)));
@@ -238,8 +239,7 @@ __kernel void get_pose_by_jnts(__global const double* restrict radians,
 								__global double* restrict ee_pose) {
 
 	// int cu_idx = get_global_id(0);
-	int buffer_size = NUM_RAD_PER_SET * FP_SIMUL_SET;
-	__local double local_radians[buffer_size];
+	__local double local_radians[FP_INPUT_BUFFER_SIZE];
 
 	for (int i = 0; i < buffer_size; ++i) {
 		local_radians[i] = radians[i];
