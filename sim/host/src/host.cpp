@@ -255,7 +255,7 @@ bool initOpencl() {
 	// input_trig_vals_buf = clCreateBuffer(context, CL_MEM_READ_ONLY, NUMBER_OF_ELEMS * sizeof(long), NULL, &err);
 	// checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'input_trig_vals_buf' failed");
 
-	input_radians_buf = clCreateBuffer(context, CL_MEM_READ_ONLY, NUMBER_OF_ELEMS_FP * sizeof(double) * COMPUTE_UNIT_NUMBER, NULL, &err);
+	input_radians_buf = clCreateBuffer(context, CL_MEM_READ_ONLY, NUMBER_OF_ELEMS_FP * sizeof(double) * COMPUTE_UNIT_NUMBER_FP, NULL, &err);
 	checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'input_radians_buf' failed");
 
 
@@ -266,7 +266,7 @@ bool initOpencl() {
 	output_ee_pose_buf = clCreateBuffer(context, CL_MEM_WRITE_ONLY, 6 * sizeof(ulong) * COMPUTE_UNIT_NUMBER, NULL, &err);
 	checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'output_ee_pose_buf' failed");
 
-	output_fp_ee_pose_buf = clCreateBuffer(context, CL_MEM_WRITE_ONLY, 3 * sizeof(double) * COMPUTE_UNIT_NUMBER, NULL, &err);
+	output_fp_ee_pose_buf = clCreateBuffer(context, CL_MEM_WRITE_ONLY, 3 * sizeof(double) * COMPUTE_UNIT_NUMBER_FP, NULL, &err);
 	checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'output_fp_ee_pose_buf' failed");
 
 	printf("FINISH INIT.\n");
@@ -278,8 +278,8 @@ void initInput() {
 	input_jnt_angles = new uint[NUMBER_OF_ELEMS * COMPUTE_UNIT_NUMBER];
 	// output_trig_vals = new ulong[NUMBER_OF_ELEMS];
 
-	input_radians = new double[NUMBER_OF_ELEMS_FP * COMPUTE_UNIT_NUMBER];
-	output_fp_ee_pose = new double[3 * COMPUTE_UNIT_NUMBER];
+	input_radians = new double[NUMBER_OF_ELEMS_FP * COMPUTE_UNIT_NUMBER_FP];
+	output_fp_ee_pose = new double[3 * COMPUTE_UNIT_NUMBER_FP];
 
 	// Randomize the input elements
 	double ja_0, ja_1, ja_2;		// cosine angle radians
@@ -294,25 +294,7 @@ void initInput() {
 	ja_2 = -0.340707;
 
 	uint delta_ja_int[3] = {convertRadsToInt(ja_0), convertRadsToInt(ja_1), convertRadsToInt(ja_2)};
-	// _ja_0 = -0.502065;
-	// _ja_1 = -0.675970;
-	// _ja_2 = -1.911503;
-	
-	// printf("Before conversion:\n");
-	// printf("ja[0] = %lf\n", ja_0);
-	// printf("ja[1] = %lf\n", ja_1);
-	// printf("ja[2] = %lf\n", ja_2);
-	// printf("ja[3] = %lf\n", _ja_0);
-	// printf("ja[4] = %lf\n", _ja_1);
-	// printf("ja[5] = %lf\n", _ja_2);
 
-	// Convert radians to corresponding integer encoding
-	// input_jnt_angles[0] = delta_ja_int[0];
-	// input_jnt_angles[1] = 112855247 + delta_ja_int[1];
-	// input_jnt_angles[2] = 7877904265 - delta_ja_int[2] - delta_ja_int[1];
-	// input_jnt_angles[3] = -1104420162 + delta_ja_int[0];
-	// input_jnt_angles[4] = -991564915 + delta_ja_int[1];
-	// input_jnt_angles[5] = 6773484103 - delta_ja_int[2] - delta_ja_int[1];
 	for (int cu_idx = 0; cu_idx < COMPUTE_UNIT_NUMBER; ++cu_idx) {
 		int offset = cu_idx * NUMBER_OF_ELEMS;
 		input_jnt_angles[offset + 0] = delta_ja_int[0];
@@ -323,8 +305,7 @@ void initInput() {
 		input_jnt_angles[offset + 5] = 6773484103 - delta_ja_int[2] - delta_ja_int[1];
 	}
 
-
-	for (int cu_idx = 0; cu_idx < COMPUTE_UNIT_NUMBER; ++cu_idx) {
+	for (int cu_idx = 0; cu_idx < COMPUTE_UNIT_NUMBER_FP; ++cu_idx) {
 		int offset = cu_idx * NUMBER_OF_ELEMS_FP;
 		input_radians[offset + 0] = ja_0;
 		input_radians[offset + 1] = atan2(3.5, 3.9);
@@ -335,11 +316,7 @@ void initInput() {
 		input_radians[offset + 6] = input_radians[offset + 2] - M_PI_2;
 		input_radians[offset + 7] = input_radians[offset + 3] - M_PI_2;
 	}
-	// printf("After conversion:\n");
-	// for (int i = 0; i < NUMBER_OF_ELEMS; ++i) {
-	// 	printf("ja[%d] = %u\n", i, input_jnt_angles[i]);
-	// }
-	// TODO: verification output
+
 	printf("Finish init of input joint angles\n");
 }
 
@@ -515,7 +492,7 @@ void runFPKM() {
 	// Enqueue write commands to the input buffer
 	cl_event write_events[1];
 	err = clEnqueueWriteBuffer(command_queues[2], input_radians_buf, CL_FALSE,
-			0, NUMBER_OF_ELEMS_FP * sizeof(double) * COMPUTE_UNIT_NUMBER, input_radians, 0, NULL, &write_events[0]);
+			0, NUMBER_OF_ELEMS_FP * sizeof(double) * COMPUTE_UNIT_NUMBER_FP, input_radians, 0, NULL, &write_events[0]);
 	checkStatus(err, __FILE__, __LINE__, "'clEnqueueWriteBuffer()' for 'input_radians_buf' failed");
 
 	// Set kernel argument
@@ -538,7 +515,7 @@ void runFPKM() {
 
 	// Enqueue read commands on the output buffer
 	err = clEnqueueReadBuffer(command_queues[2], output_fp_ee_pose_buf, CL_FALSE, 0,
-			3 * sizeof(double) * COMPUTE_UNIT_NUMBER, output_fp_ee_pose, 1, &kernel_event,
+			3 * sizeof(double) * COMPUTE_UNIT_NUMBER_FP, output_fp_ee_pose, 1, &kernel_event,
 			&finish_event);
 	checkStatus(err, __FILE__, __LINE__, "'clEnqueueReadBuffer()' failed");
 

@@ -5,7 +5,7 @@
 // channel long trig_val_chan __attribute__((depth(6)));
 
 #define CU_NUM 16
-#define FP_SIMUL_SET 16
+#define FP_SIMUL_SET 8
 #define NUM_JA_PER_SET 6
 #define NUM_OUT_POSE_PER_SET 6
 #define NUM_RAD_PER_SET 8

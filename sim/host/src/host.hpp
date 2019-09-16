@@ -20,6 +20,7 @@
 #define COMPUTE_UNIT_NUMBER 16
 #define NUMBER_OF_ELEMS 6
 #define NUMBER_OF_ELEMS_FP 8
+#define COMPUTE_UNIT_NUMBER_FP 8
 
 #ifndef M_PI
 	#define M_PI 3.14159265359

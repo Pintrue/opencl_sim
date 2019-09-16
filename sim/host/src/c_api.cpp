@@ -158,7 +158,7 @@ matrix_t* resetStateReaching(int rand_angle, int dest_pos, int state_dim, int ac
 
 	cout << "-------------------------------" << endl;
 	cout << "Result from FPKM kernel execution" << endl;
-	for (int j = 0; j < COMPUTE_UNIT_NUMBER; ++j) {
+	for (int j = 0; j < COMPUTE_UNIT_NUMBER_FP; ++j) {
 		int offset = j * 3;
 		for (int i = 0; i < 3; ++i) {
 			cout << output_fp_ee_pose[offset + i] << " ";
