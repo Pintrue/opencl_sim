@@ -66,7 +66,7 @@ __kernel void cosine_int_32(__global const uint* restrict jnt_angles) {
 		char grads[16];
 		long intercepts[16];
 
-		#pragma unroll
+		#pragma unroll 4
 		for (int i = 0; i < 16; ++i) {
 			angle_inputs[i] = jnt_angles[idx + i * 6];
 
@@ -77,7 +77,7 @@ __kernel void cosine_int_32(__global const uint* restrict jnt_angles) {
 
 		ulong trig_vals[16];
 
-		#pragma unroll
+		#pragma unroll 4
 		for (int i = 0; i < 16; ++i) {
 			trig_vals[i] = (ulong) grads[i] * angle_inputs[i] + intercepts[i];
 		}
@@ -238,7 +238,6 @@ __kernel void get_pose_by_jnts(__global const double* restrict radians,
 								__global double* restrict ee_pose) {
 
 	// int cu_idx = get_global_id(0);
-	#pragma unroll 2
 	for (int cu_idx = 0; cu_idx < FP_SIMUL_SET; ++cu_idx) {
 		int radians_offset = cu_idx * NUM_RAD_PER_SET;
 		int out_ee_pose_offset = cu_idx * NUM_OUT_POSE_PER_SET_FP;
