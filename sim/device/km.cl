@@ -10,6 +10,7 @@
 #define NUM_OUT_POSE_PER_SET 6
 #define NUM_RAD_PER_SET 8
 #define NUM_OUT_POSE_PER_SET_FP 3
+#define FP_INPUT_BUFFER_SIZE (FP_SIMUL_SET * NUM_RAD_PER_SET)
 
 
 channel ulong all_trig_val_chnls[CU_NUM] __attribute__((depth(NUM_JA_PER_SET)));
@@ -238,6 +239,12 @@ __kernel void get_pose_by_jnts(__global const double* restrict radians,
 								__global double* restrict ee_pose) {
 
 	// int cu_idx = get_global_id(0);
+	__local double local_radians[FP_INPUT_BUFFER_SIZE];
+
+	for (int i = 0; i < FP_INPUT_BUFFER_SIZE; ++i) {
+		local_radians[i] = radians[i];
+	}
+
 	for (int cu_idx = 0; cu_idx < FP_SIMUL_SET; ++cu_idx) {
 		int radians_offset = cu_idx * NUM_RAD_PER_SET;
 		int out_ee_pose_offset = cu_idx * NUM_OUT_POSE_PER_SET_FP;
@@ -257,7 +264,7 @@ __kernel void get_pose_by_jnts(__global const double* restrict radians,
 
 
 		// d1 = -l2*cos(a3);
-		double d1 = -link_lengths[1] * cos(radians[radians_offset + 2]);
+		double d1 = -link_lengths[1] * cos(local_radians[radians_offset + 2]);
 
 
 		// d1 += l1*cos(a2)+l3*cos(a4);
@@ -268,6 +275,6 @@ __kernel void get_pose_by_jnts(__global const double* restrict radians,
 
 		ee_pose[out_ee_pose_offset] = d1 * cos(radians[radians_offset + 4]);
 		ee_pose[out_ee_pose_offset + 1] = y;
-		ee_pose[out_ee_pose_offset + 2] = d1 * cos(radians[radians_offset]);
+		ee_pose[out_ee_pose_offset + 2] = d1 * cos(local_radians[radians_offset]);
 	}
 }
