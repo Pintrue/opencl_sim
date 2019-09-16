@@ -241,7 +241,7 @@ __kernel void get_pose_by_jnts(__global const double* restrict radians,
 	// int cu_idx = get_global_id(0);
 	__local double local_radians[FP_INPUT_BUFFER_SIZE];
 
-	for (int i = 0; i < buffer_size; ++i) {
+	for (int i = 0; i < FP_INPUT_BUFFER_SIZE; ++i) {
 		local_radians[i] = radians[i];
 	}
 
