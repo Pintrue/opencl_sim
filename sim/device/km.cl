@@ -253,13 +253,16 @@ __kernel void get_pose_by_jnts(__global const double* restrict radians,
 
 		// y = base_height/2.9;
 		// ee_pose[1] = 2.9;
-		double y = 2.9;
+		// double y = 2.9;
 
 		// y += l1*sin(a2) + l2*sin(a3) + l3*sin(a4);
 
-		#pragma unroll 1
+		double y_subterms[3];
+
+		#pragma unroll
 		for (int i = 0; i < 3; ++i) {
-			y += link_lengths[i] * cos(radians[radians_offset + i + 5]);
+			// y += link_lengths[i] * cos(radians[radians_offset + i + 5]);
+			y_subterms[i] = link_lengths[i] * cos(radians[radians_offset + i + 5]);
 		}
 
 
@@ -267,14 +270,24 @@ __kernel void get_pose_by_jnts(__global const double* restrict radians,
 		double d1 = -link_lengths[1] * cos(local_radians[radians_offset + 2]);
 
 
-		// d1 += l1*cos(a2)+l3*cos(a4);
-		#pragma unroll 1
+		// // d1 += l1*cos(a2)+l3*cos(a4);
+		// #pragma unroll 1
+		// for (int i = 0; i < 3; i += 2) {
+		// 	d1 += link_lengths[i] * cos(radians[radians_offset + i + 1]);
+		// }
+
+		double d1_subterms[3];
+
+		#pragma unroll
 		for (int i = 0; i < 3; i += 2) {
-			d1 += link_lengths[i] * cos(radians[radians_offset + i + 1]);
+			d1_subterms[i] = link_lengths[i] * cos(radians[radians_offset + i + 1]);
 		}
 
+		d1 += d1_subterms[0] + d1_subterms[2]; 
+
 		ee_pose[out_ee_pose_offset] = d1 * cos(radians[radians_offset + 4]);
-		ee_pose[out_ee_pose_offset + 1] = y;
+		// ee_pose[out_ee_pose_offset + 1] = y;
+		ee_pose[out_ee_pose_offset + 1] = 2.9 + y_subterms[0] + y_subterms[1] + y_subterms[2];
 		ee_pose[out_ee_pose_offset + 2] = d1 * cos(local_radians[radians_offset]);
 	}
 }
