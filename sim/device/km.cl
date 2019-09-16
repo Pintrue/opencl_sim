@@ -27,13 +27,13 @@ __kernel void cosine_int_32(__global const uint* restrict jnt_angles) {
 		intercept_table_32[i] = 287708254;
 	}
 
-	#pragma unroll 4
+	#pragma unroll 2
 	for (uint i = 351; i < 819; ++i) {
 		grad_table_32[i] = 1;
 		intercept_table_32[i] = -368140054;
 	}
 
-	#pragma unroll 4
+	#pragma unroll 2
 	for (uint i = 819; i < 1872; ++i) {
 		grad_table_32[i] = 3;
 		intercept_table_32[i] = -2262381335;
@@ -45,7 +45,7 @@ __kernel void cosine_int_32(__global const uint* restrict jnt_angles) {
 		intercept_table_32[i] = 1717986918;
 	}
 
-	#pragma unroll 4
+	#pragma unroll 2
 	for (uint i = 2457; i < 3042; ++i) {
 		grad_table_32[i] = -1;
 		intercept_table_32[i] = 6871947672;
@@ -59,62 +59,9 @@ __kernel void cosine_int_32(__global const uint* restrict jnt_angles) {
 	//end init
 
 	// NOTE: INTEL OPENCL does not support dynamic indexing on channel IDs
+	#pragma unroll 4
 	for (uint idx = 0; idx < (uint)NUM_JA_PER_SET; ++idx) {
-		// uint angle_input_0 = jnt_angles[idx];
-		// uint angle_input_1 = jnt_angles[idx + 6];
-		// uint angle_input_2 = jnt_angles[idx + 12];
-		// uint angle_input_3 = jnt_angles[idx + 18];
-		// uint angle_input_4 = jnt_angles[idx + 24];
-		// uint angle_input_5 = jnt_angles[idx + 30];
-		// uint angle_input_6 = jnt_angles[idx + 36];
-		// uint angle_input_7 = jnt_angles[idx + 42];
-		// uint angle_input_8 = jnt_angles[idx + 48];
-		// uint angle_input_9 = jnt_angles[idx + 54];
-		// uint angle_input_10 = jnt_angles[idx + 60];
-		// uint angle_input_11 = jnt_angles[idx + 66];
-		// uint angle_input_12 = jnt_angles[idx + 72];
-		// uint angle_input_13 = jnt_angles[idx + 78];
-		// uint angle_input_14 = jnt_angles[idx + 84];
-		// uint angle_input_15 = jnt_angles[idx + 90];
-
-		// // mask and shift to obtain LUT index
-		// uint angle_idx_0 = (angle_input_0 & 0xFFF00000) >> 20;
-		// uint angle_idx_1 = (angle_input_1 & 0xFFF00000) >> 20;
-		// uint angle_idx_2 = (angle_input_2 & 0xFFF00000) >> 20;
-		// uint angle_idx_3 = (angle_input_3 & 0xFFF00000) >> 20;
-		// uint angle_idx_4 = (angle_input_4 & 0xFFF00000) >> 20;
-		// uint angle_idx_5 = (angle_input_5 & 0xFFF00000) >> 20;
-		// uint angle_idx_6 = (angle_input_6 & 0xFFF00000) >> 20;
-		// uint angle_idx_7 = (angle_input_7 & 0xFFF00000) >> 20;
-		// uint angle_idx_8 = (angle_input_8 & 0xFFF00000) >> 20;
-		// uint angle_idx_9 = (angle_input_9 & 0xFFF00000) >> 20;
-		// uint angle_idx_10 = (angle_input_10 & 0xFFF00000) >> 20;
-		// uint angle_idx_11 = (angle_input_11 & 0xFFF00000) >> 20;
-		// uint angle_idx_12 = (angle_input_12 & 0xFFF00000) >> 20;
-		// uint angle_idx_13 = (angle_input_13 & 0xFFF00000) >> 20;
-		// uint angle_idx_14 = (angle_input_14 & 0xFFF00000) >> 20;
-		// uint angle_idx_15 = (angle_input_15 & 0xFFF00000) >> 20;
-
-
-		// // obtain trigonometry encoding value at that LUT index
-
-		// ulong trig_val_temp_0 = (ulong) grad_table_32[angle_idx_0] * angle_input_0 + intercept_table_32[angle_idx_0];
-		// ulong trig_val_temp_1 = (ulong) grad_table_32[angle_idx_1] * angle_input_1 + intercept_table_32[angle_idx_1];
-		// ulong trig_val_temp_2 = (ulong) grad_table_32[angle_idx_2] * angle_input_2 + intercept_table_32[angle_idx_2];
-		// ulong trig_val_temp_3 = (ulong) grad_table_32[angle_idx_3] * angle_input_3 + intercept_table_32[angle_idx_3];
-		// ulong trig_val_temp_4 = (ulong) grad_table_32[angle_idx_4] * angle_input_4 + intercept_table_32[angle_idx_4];
-		// ulong trig_val_temp_5 = (ulong) grad_table_32[angle_idx_5] * angle_input_5 + intercept_table_32[angle_idx_5];
-		// ulong trig_val_temp_6 = (ulong) grad_table_32[angle_idx_6] * angle_input_6 + intercept_table_32[angle_idx_6];
-		// ulong trig_val_temp_7 = (ulong) grad_table_32[angle_idx_7] * angle_input_7 + intercept_table_32[angle_idx_7];
-		// ulong trig_val_temp_8 = (ulong) grad_table_32[angle_idx_8] * angle_input_8 + intercept_table_32[angle_idx_8];
-		// ulong trig_val_temp_9 = (ulong) grad_table_32[angle_idx_9] * angle_input_9 + intercept_table_32[angle_idx_9];
-		// ulong trig_val_temp_10 = (ulong) grad_table_32[angle_idx_10] * angle_input_10 + intercept_table_32[angle_idx_10];
-		// ulong trig_val_temp_11 = (ulong) grad_table_32[angle_idx_11] * angle_input_11 + intercept_table_32[angle_idx_11];
-		// ulong trig_val_temp_12 = (ulong) grad_table_32[angle_idx_12] * angle_input_12 + intercept_table_32[angle_idx_12];
-		// ulong trig_val_temp_13 = (ulong) grad_table_32[angle_idx_13] * angle_input_13 + intercept_table_32[angle_idx_13];
-		// ulong trig_val_temp_14 = (ulong) grad_table_32[angle_idx_14] * angle_input_14 + intercept_table_32[angle_idx_14];
-		// ulong trig_val_temp_15 = (ulong) grad_table_32[angle_idx_15] * angle_input_15 + intercept_table_32[angle_idx_15];
-
+		
 		uint angle_inputs[16];
 		char grads[16];
 		long intercepts[16];
@@ -294,29 +241,29 @@ __kernel void get_pose_by_jnts(__global const double* restrict radians,
 	for (int cu_idx = 0; cu_idx < FP_SIMUL_SET; ++cu_idx) {
 		int radians_offset = cu_idx * NUM_RAD_PER_SET;
 		int out_ee_pose_offset = cu_idx * NUM_OUT_POSE_PER_SET_FP;
-	
+
 		double link_lengths[3] = {sqrt(3.5*3.5+3.9*3.9), sqrt(1.7*1.7+10.5*10.5), sqrt(3.5*3.5+16.5*16.5)};
-		
+
 		// y = base_height/2.9;
 		// ee_pose[1] = 2.9;
 		double y = 2.9;
-	
+
 		// y += l1*sin(a2) + l2*sin(a3) + l3*sin(a4);
-		
+
 		for (int i = 0; i < 3; ++i) {
 			y += link_lengths[i] * cos(radians[radians_offset + i + 5]);
 		}
-	
-		
+
+
 		// d1 = -l2*cos(a3);
 		double d1 = -link_lengths[1] * cos(radians[radians_offset + 2]);
-	
-		
+
+
 		// d1 += l1*cos(a2)+l3*cos(a4);
 		for (int i = 0; i < 3; i += 2) {
 			d1 += link_lengths[i] * cos(radians[radians_offset + i + 1]);
 		}
-	
+
 		ee_pose[out_ee_pose_offset] = d1 * cos(radians[radians_offset + 4]);
 		ee_pose[out_ee_pose_offset + 1] = y;
 		ee_pose[out_ee_pose_offset + 2] = d1 * cos(radians[radians_offset]);
