@@ -264,7 +264,7 @@ __kernel void get_pose_by_jnts(__global const double* restrict radians,
 
 		y += link_lengths[0] * cos(local_radians[radians_offset + 5]);
 		y += link_lengths[1] * cos(local_radians[radians_offset + 6]);
-		y += link_lengths[1] * cos(local_radians[radians_offset + 7]);
+		y += link_lengths[2] * cos(local_radians[radians_offset + 7]);
 
 
 		// d1 = -l2*cos(a3);
