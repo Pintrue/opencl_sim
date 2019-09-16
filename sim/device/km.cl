@@ -238,6 +238,7 @@ __kernel void get_pose_by_jnts(__global const double* restrict radians,
 								__global double* restrict ee_pose) {
 
 	// int cu_idx = get_global_id(0);
+	#pragma unroll
 	for (int cu_idx = 0; cu_idx < FP_SIMUL_SET; ++cu_idx) {
 		int radians_offset = cu_idx * NUM_RAD_PER_SET;
 		int out_ee_pose_offset = cu_idx * NUM_OUT_POSE_PER_SET_FP;
