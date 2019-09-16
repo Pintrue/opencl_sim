@@ -250,7 +250,7 @@ __kernel void get_pose_by_jnts(__global const double* restrict radians,
 
 		// y += l1*sin(a2) + l2*sin(a3) + l3*sin(a4);
 
-		#pragma unroll 2
+		#pragma unroll
 		for (int i = 0; i < 3; ++i) {
 			y += link_lengths[i] * cos(radians[radians_offset + i + 5]);
 		}
@@ -261,7 +261,7 @@ __kernel void get_pose_by_jnts(__global const double* restrict radians,
 
 
 		// d1 += l1*cos(a2)+l3*cos(a4);
-		#pragma unroll 2
+		#pragma unroll
 		for (int i = 0; i < 3; i += 2) {
 			d1 += link_lengths[i] * cos(radians[radians_offset + i + 1]);
 		}
