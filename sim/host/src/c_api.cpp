@@ -134,6 +134,8 @@ matrix_t* resetStateReaching(int rand_angle, int dest_pos, int state_dim, int ac
 	// TODO: get pos from kernel
 
 	initInput();
+
+	#ifdef ENABLE_KM
 	initKMInput();
 
 	run();
@@ -154,6 +156,7 @@ matrix_t* resetStateReaching(int rand_angle, int dest_pos, int state_dim, int ac
 		cout << endl;
 
 	}
+	#endif
 
 	#ifdef ENABLE_FPKM
 	runFPKM();

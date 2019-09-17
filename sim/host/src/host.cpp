@@ -9,7 +9,7 @@
 #include "host.hpp"
 
 
-#define DEBUG_PRTOUT
+// #define DEBUG_PRTOUT
 
 using namespace std;
 
@@ -22,6 +22,8 @@ cl_context context = NULL;
 size_t cq_size = 3;
 vector<cl_command_queue> command_queues(cq_size);
 cl_program program = NULL;
+
+#ifdef ENABLE_KM
 cl_kernel kernel;
 cl_kernel km_kernel;
 
@@ -31,11 +33,10 @@ cl_mem input_jnt_angles_buf;
 cl_mem output_ee_pose_buf;
 
 // Input data
-uint* input_jnt_angles;// = new uint[NUMBER_OF_ELEMS];
-// ulong* output_trig_vals;// = new ulong[NUMBER_OF_ELEMS];
+uint* input_jnt_angles;
 
-// long* input_trig_vals;
 ulong* output_ee_pose;
+#endif
 
 #ifdef ENABLE_FPKM
 cl_kernel fp_km_kernel;
@@ -235,6 +236,7 @@ bool initOpencl() {
 	}
 
 	// Create the kernel
+	#ifdef ENABLE_KM
 	const char* kernel_name = "cosine_int_32";
 	kernel = clCreateKernel(program, kernel_name, &err);
 	checkStatus(err, __FILE__, __LINE__, "'clCreateKernel()' failed");
@@ -242,6 +244,7 @@ bool initOpencl() {
 	const char* km_kernel_name = "get_pose_by_jnts_int_32";
 	km_kernel = clCreateKernel(program, km_kernel_name, &err);
 	checkStatus(err, __FILE__, __LINE__, "'clCreateKernel()' failed");
+	#endif
 
 	#ifdef ENABLE_FPKM
 	const char* fp_km_kernel_name = "get_pose_by_jnts";
@@ -250,20 +253,13 @@ bool initOpencl() {
 	#endif
 
 	// Create the input buffer
+	#ifdef ENABLE_KM
 	input_jnt_angles_buf = clCreateBuffer(context, CL_MEM_READ_ONLY, NUMBER_OF_ELEMS * sizeof(uint) * COMPUTE_UNIT_NUMBER, NULL, &err);
 	checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'input_jnt_angles_buf' failed");
 
-	// input_trig_vals_buf = clCreateBuffer(context, CL_MEM_READ_ONLY, NUMBER_OF_ELEMS * sizeof(long), NULL, &err);
-	// checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'input_trig_vals_buf' failed");
-
-
-
-	// Create the output buffer
-	// output_trig_vals_buf = clCreateBuffer(context, CL_MEM_WRITE_ONLY, NUMBER_OF_ELEMS * sizeof(ulong), NULL, &err);
-	// checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'output_trig_vals_buf' failed");
-
 	output_ee_pose_buf = clCreateBuffer(context, CL_MEM_WRITE_ONLY, 6 * sizeof(ulong) * COMPUTE_UNIT_NUMBER, NULL, &err);
 	checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'output_ee_pose_buf' failed");
+	#endif
 
 	#ifdef ENABLE_FPKM
 	input_radians_buf = clCreateBuffer(context, CL_MEM_READ_ONLY, NUMBER_OF_ELEMS_FP * sizeof(double) * COMPUTE_UNIT_NUMBER_FP, NULL, &err);
@@ -279,8 +275,9 @@ bool initOpencl() {
 
 
 void initInput() {
+	#ifdef ENABLE_KM
 	input_jnt_angles = new uint[NUMBER_OF_ELEMS * COMPUTE_UNIT_NUMBER];
-	// output_trig_vals = new ulong[NUMBER_OF_ELEMS];
+	#endif
 
 	#ifdef ENABLE_FPKM
 	input_radians = new double[NUMBER_OF_ELEMS_FP * COMPUTE_UNIT_NUMBER_FP];
@@ -299,6 +296,7 @@ void initInput() {
 	ja_1 = 0.894826;
 	ja_2 = -0.340707;
 
+	#ifdef ENABLE_KM
 	uint delta_ja_int[3] = {convertRadsToInt(ja_0), convertRadsToInt(ja_1), convertRadsToInt(ja_2)};
 
 	for (int cu_idx = 0; cu_idx < COMPUTE_UNIT_NUMBER; ++cu_idx) {
@@ -310,6 +308,7 @@ void initInput() {
 		input_jnt_angles[offset + 4] = -991564915 + delta_ja_int[1];
 		input_jnt_angles[offset + 5] = 6773484103 - delta_ja_int[2] - delta_ja_int[1];
 	}
+	#endif
 
 	#ifdef ENABLE_FPKM
 	for (int cu_idx = 0; cu_idx < COMPUTE_UNIT_NUMBER_FP; ++cu_idx) {
@@ -330,6 +329,7 @@ void initInput() {
 
 
 void initInput(double jnt_angles[3]) {
+	// TODO:: CHANGE THIS FUNCTION!!
 	input_jnt_angles = new uint[NUMBER_OF_ELEMS];
 	// output_trig_vals = new ulong[NUMBER_OF_ELEMS];
 
@@ -356,8 +356,8 @@ void initInput(double jnt_angles[3]) {
 }
 
 
+#ifdef ENABLE_KM
 void initKMInput() {
-	// input_trig_vals = new long[NUMBER_OF_ELEMS];
 	output_ee_pose = new ulong[6 * COMPUTE_UNIT_NUMBER];
 }
 
@@ -484,6 +484,8 @@ void runKM() {
 	clReleaseEvent(kernel_event);
 	clReleaseEvent(finish_event);
 }
+#endif
+
 
 #ifdef ENABLE_FPKM
 void runFPKM() {
@@ -549,6 +551,7 @@ void runFPKM() {
 
 
 void cleanup() {
+	#ifdef ENABLE_KM
 	if (kernel) {
 		clReleaseKernel(kernel);
 	}
@@ -556,6 +559,7 @@ void cleanup() {
 	if (km_kernel) {
 		clReleaseKernel(km_kernel);
 	}
+	#endif
 
 	#ifdef ENABLE_FPKM
 	if (fp_km_kernel) {
@@ -577,27 +581,15 @@ void cleanup() {
 		clReleaseContext(context);
 	}
 
+	#ifdef ENABLE_KM
 	if (input_jnt_angles_buf) {
 		clReleaseMemObject(input_jnt_angles_buf);
 	}
 
-	// if (input_trig_vals_buf) {
-	// 	clReleaseMemObject(input_trig_vals_buf);
-	// }
-
-
-	// if (output_trig_vals_buf) {
-	// 	clReleaseMemObject(output_trig_vals_buf);
-	// }
-
 	if (output_ee_pose_buf) {
 		clReleaseMemObject(output_ee_pose_buf);
 	}
-
-	// if (output_trig_vals) {
-	// 	delete[] output_trig_vals;
-	// }
-
+	
 	if (input_jnt_angles) {
 		delete[] input_jnt_angles;
 	}
@@ -605,6 +597,7 @@ void cleanup() {
 	if (output_ee_pose) {
 		delete[] output_ee_pose;
 	}
+	#endif
 	
 	#ifdef ENABLE_FPKM
 	if (input_radians_buf) {
