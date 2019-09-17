@@ -327,7 +327,7 @@ void initInput() {
 	printf("Finish init of input joint angles\n");
 }
 
-
+#ifdef ENABLE_KM
 void initInput(double jnt_angles[3]) {
 	// TODO:: CHANGE THIS FUNCTION!!
 	input_jnt_angles = new uint[NUMBER_OF_ELEMS];
@@ -354,6 +354,7 @@ void initInput(double jnt_angles[3]) {
 	input_jnt_angles[4] = -991564915 + delta_ja_int[1];
 	input_jnt_angles[5] = 6773484103 - delta_ja_int[2] - delta_ja_int[1];
 }
+#endif
 
 
 #ifdef ENABLE_KM
