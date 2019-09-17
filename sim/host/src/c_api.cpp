@@ -138,7 +138,6 @@ matrix_t* resetStateReaching(int rand_angle, int dest_pos, int state_dim, int ac
 
 	run();
 	runKM();
-	runFPKM();
 
 	for (int i = 0; i < COMPUTE_UNIT_NUMBER; ++i) {
 		cout << "-------------------------------" << endl;
@@ -156,6 +155,9 @@ matrix_t* resetStateReaching(int rand_angle, int dest_pos, int state_dim, int ac
 
 	}
 
+	#ifdef ENABLE_FPKM
+	runFPKM();
+
 	cout << "-------------------------------" << endl;
 	cout << "Result from FPKM kernel execution" << endl;
 	for (int j = 0; j < COMPUTE_UNIT_NUMBER_FP; ++j) {
@@ -165,6 +167,7 @@ matrix_t* resetStateReaching(int rand_angle, int dest_pos, int state_dim, int ac
 		}
 		cout << endl;
 	}
+	#endif
 
 
 	// set initial arm pose
