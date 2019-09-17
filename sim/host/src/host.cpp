@@ -37,7 +37,7 @@ uint* input_jnt_angles;// = new uint[NUMBER_OF_ELEMS];
 // long* input_trig_vals;
 ulong* output_ee_pose;
 
-
+#ifdef ENABLE_FPKM
 cl_kernel fp_km_kernel;
 
 cl_mem input_radians_buf;
@@ -45,7 +45,7 @@ cl_mem output_fp_ee_pose_buf;
 
 double* input_radians;
 double* output_fp_ee_pose;
-
+#endif
 
 // Function prototypes
 // void checkStatus(cl_int status, const char* file, int line, const char* msg);
@@ -243,10 +243,11 @@ bool initOpencl() {
 	km_kernel = clCreateKernel(program, km_kernel_name, &err);
 	checkStatus(err, __FILE__, __LINE__, "'clCreateKernel()' failed");
 
+	#ifdef ENABLE_FPKM
 	const char* fp_km_kernel_name = "get_pose_by_jnts";
 	fp_km_kernel = clCreateKernel(program, fp_km_kernel_name, &err);
 	checkStatus(err, __FILE__, __LINE__, "'clCreateKernel()' failed");
-
+	#endif
 
 	// Create the input buffer
 	input_jnt_angles_buf = clCreateBuffer(context, CL_MEM_READ_ONLY, NUMBER_OF_ELEMS * sizeof(uint) * COMPUTE_UNIT_NUMBER, NULL, &err);
@@ -255,8 +256,6 @@ bool initOpencl() {
 	// input_trig_vals_buf = clCreateBuffer(context, CL_MEM_READ_ONLY, NUMBER_OF_ELEMS * sizeof(long), NULL, &err);
 	// checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'input_trig_vals_buf' failed");
 
-	input_radians_buf = clCreateBuffer(context, CL_MEM_READ_ONLY, NUMBER_OF_ELEMS_FP * sizeof(double) * COMPUTE_UNIT_NUMBER_FP, NULL, &err);
-	checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'input_radians_buf' failed");
 
 
 	// Create the output buffer
@@ -266,8 +265,13 @@ bool initOpencl() {
 	output_ee_pose_buf = clCreateBuffer(context, CL_MEM_WRITE_ONLY, 6 * sizeof(ulong) * COMPUTE_UNIT_NUMBER, NULL, &err);
 	checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'output_ee_pose_buf' failed");
 
+	#ifdef ENABLE_FPKM
+	input_radians_buf = clCreateBuffer(context, CL_MEM_READ_ONLY, NUMBER_OF_ELEMS_FP * sizeof(double) * COMPUTE_UNIT_NUMBER_FP, NULL, &err);
+	checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'input_radians_buf' failed");
+
 	output_fp_ee_pose_buf = clCreateBuffer(context, CL_MEM_WRITE_ONLY, 3 * sizeof(double) * COMPUTE_UNIT_NUMBER_FP, NULL, &err);
 	checkStatus(err, __FILE__, __LINE__, "'clCreateBuffer()' for 'output_fp_ee_pose_buf' failed");
+	#endif
 
 	printf("FINISH INIT.\n");
 	return true;
@@ -278,8 +282,10 @@ void initInput() {
 	input_jnt_angles = new uint[NUMBER_OF_ELEMS * COMPUTE_UNIT_NUMBER];
 	// output_trig_vals = new ulong[NUMBER_OF_ELEMS];
 
+	#ifdef ENABLE_FPKM
 	input_radians = new double[NUMBER_OF_ELEMS_FP * COMPUTE_UNIT_NUMBER_FP];
 	output_fp_ee_pose = new double[3 * COMPUTE_UNIT_NUMBER_FP];
+	#endif
 
 	// Randomize the input elements
 	double ja_0, ja_1, ja_2;		// cosine angle radians
@@ -305,6 +311,7 @@ void initInput() {
 		input_jnt_angles[offset + 5] = 6773484103 - delta_ja_int[2] - delta_ja_int[1];
 	}
 
+	#ifdef ENABLE_FPKM
 	for (int cu_idx = 0; cu_idx < COMPUTE_UNIT_NUMBER_FP; ++cu_idx) {
 		int offset = cu_idx * NUMBER_OF_ELEMS_FP;
 		input_radians[offset + 0] = ja_0;
@@ -316,6 +323,7 @@ void initInput() {
 		input_radians[offset + 6] = input_radians[offset + 2] - M_PI_2;
 		input_radians[offset + 7] = input_radians[offset + 3] - M_PI_2;
 	}
+	#endif
 
 	printf("Finish init of input joint angles\n");
 }
@@ -477,7 +485,7 @@ void runKM() {
 	clReleaseEvent(finish_event);
 }
 
-
+#ifdef ENABLE_FPKM
 void runFPKM() {
 	cl_int err;
 
@@ -537,6 +545,7 @@ void runFPKM() {
 	clReleaseEvent(kernel_event);
 	clReleaseEvent(finish_event);
 }
+#endif
 
 
 void cleanup() {
@@ -548,9 +557,11 @@ void cleanup() {
 		clReleaseKernel(km_kernel);
 	}
 
+	#ifdef ENABLE_FPKM
 	if (fp_km_kernel) {
 		clReleaseKernel(fp_km_kernel);
 	}
+	#endif
 
 	if (program) {
 		clReleaseProgram(program);
@@ -574,9 +585,6 @@ void cleanup() {
 	// 	clReleaseMemObject(input_trig_vals_buf);
 	// }
 
-	if (input_radians_buf) {
-		clReleaseMemObject(input_radians_buf);
-	}
 
 	// if (output_trig_vals_buf) {
 	// 	clReleaseMemObject(output_trig_vals_buf);
@@ -586,29 +594,36 @@ void cleanup() {
 		clReleaseMemObject(output_ee_pose_buf);
 	}
 
-	if (output_fp_ee_pose_buf) {
-		clReleaseMemObject(output_fp_ee_pose_buf);
-	}
+	// if (output_trig_vals) {
+	// 	delete[] output_trig_vals;
+	// }
 
 	if (input_jnt_angles) {
 		delete[] input_jnt_angles;
 	}
 
-	if (input_radians) {
-		delete[] input_radians;
-	}
-
-	// if (output_trig_vals) {
-	// 	delete[] output_trig_vals;
-	// }
-
 	if (output_ee_pose) {
 		delete[] output_ee_pose;
+	}
+	
+	#ifdef ENABLE_FPKM
+	if (input_radians_buf) {
+		clReleaseMemObject(input_radians_buf);
+	}
+
+	if (output_fp_ee_pose_buf) {
+		clReleaseMemObject(output_fp_ee_pose_buf);
+	}
+
+
+	if (input_radians) {
+		delete[] input_radians;
 	}
 
 	if (output_fp_ee_pose) {
 		delete[] output_fp_ee_pose;
 	}
+	#endif
 
 	printf("FINISH CLEANUP.\n");
 }

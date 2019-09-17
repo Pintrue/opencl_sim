@@ -33,9 +33,12 @@
 #define JNT2_L -M_PI/2
 #define JNT2_U 0.0
 
+// #define ENABLE_FPKM
 
 extern ulong* output_ee_pose;
+#ifdef ENABLE_FPKM
 extern double* output_fp_ee_pose;
+#endif
 
 void checkStatus(cl_int status, const char* file, int line, const char* msg);
 double randAngleRads(double lower, double upper);
@@ -47,7 +50,11 @@ void initInput(double jnt_angles[3]);
 void initKMInput();
 void run();
 void runKM();
+
+#ifdef ENABLE_FPKM
 void runFPKM();
+#endif
+
 void cleanup();
 
 #endif

@@ -235,37 +235,37 @@ __kernel void get_pose_by_jnts_int_32(__global ulong* restrict ee_pose) {
 
 
 // __attribute__((reqd_work_group_size(1, 1, 1)))
-__kernel void get_pose_by_jnts(__global const double* restrict radians,
-								__global double* restrict ee_pose) {
+// __kernel void get_pose_by_jnts(__global const double* restrict radians,
+// 								__global double* restrict ee_pose) {
 
-	int cu_idx = get_global_id(0);
-	int radians_offset = cu_idx * NUM_RAD_PER_SET;
-	int out_ee_pose_offset = cu_idx * NUM_OUT_POSE_PER_SET_FP;
+// 	int cu_idx = get_global_id(0);
+// 	int radians_offset = cu_idx * NUM_RAD_PER_SET;
+// 	int out_ee_pose_offset = cu_idx * NUM_OUT_POSE_PER_SET_FP;
 
-	double link_lengths[3] = {sqrt(3.5*3.5+3.9*3.9), sqrt(1.7*1.7+10.5*10.5), sqrt(3.5*3.5+16.5*16.5)};
+// 	double link_lengths[3] = {sqrt(3.5*3.5+3.9*3.9), sqrt(1.7*1.7+10.5*10.5), sqrt(3.5*3.5+16.5*16.5)};
 	
-	// y = base_height/2.9;
-	// ee_pose[1] = 2.9;
-	double y_subterms[3];
+// 	// y = base_height/2.9;
+// 	// ee_pose[1] = 2.9;
+// 	double y_subterms[3];
 	
-	#pragma unroll 3
-	for (int i = 0; i < 3; ++i) {
-		// y += link_lengths[i] * cos(radians[radians_offset + i + 5]);
-		y_subterms[i] = link_lengths[i] * cos(radians[radians_offset + i + 5]);
-	}
+// 	#pragma unroll 3
+// 	for (int i = 0; i < 3; ++i) {
+// 		// y += link_lengths[i] * cos(radians[radians_offset + i + 5]);
+// 		y_subterms[i] = link_lengths[i] * cos(radians[radians_offset + i + 5]);
+// 	}
 	
-	// d1 = -l2*cos(a3);
-	double d1_subterms[3];
+// 	// d1 = -l2*cos(a3);
+// 	double d1_subterms[3];
 	
-	#pragma unroll 3
-	for (int i = 0; i < 3; ++i) {
-		d1_subterms[i] = link_lengths[i] * cos(radians[radians_offset + i + 1]);
-	}
+// 	#pragma unroll 3
+// 	for (int i = 0; i < 3; ++i) {
+// 		d1_subterms[i] = link_lengths[i] * cos(radians[radians_offset + i + 1]);
+// 	}
 	
-	double d1 = d1_subterms[0] - d1_subterms[1] + d1_subterms[2]; 
+// 	double d1 = d1_subterms[0] - d1_subterms[1] + d1_subterms[2]; 
 
 
-	ee_pose[out_ee_pose_offset] = d1 * cos(radians[radians_offset + 4]);
-	ee_pose[out_ee_pose_offset + 1] = 2.9 + y_subterms[0] + y_subterms[1] + y_subterms[2];
-	ee_pose[out_ee_pose_offset + 2] = d1 * cos(radians[radians_offset]);
-}
+// 	ee_pose[out_ee_pose_offset] = d1 * cos(radians[radians_offset + 4]);
+// 	ee_pose[out_ee_pose_offset + 1] = 2.9 + y_subterms[0] + y_subterms[1] + y_subterms[2];
+// 	ee_pose[out_ee_pose_offset + 2] = d1 * cos(radians[radians_offset]);
+// }
