@@ -1,3 +1,4 @@
+#include <cstring>
 #include <stdlib.h>
 #include <stdio.h>
 #include <iostream>
@@ -133,28 +134,43 @@ matrix_t* resetStateReaching(int rand_angle, int dest_pos, int state_dim, int ac
 	// TODO: get pos from kernel
 
 	initInput();
+
+	#ifdef ENABLE_KM
 	initKMInput();
 
 	run();
 	runKM();
+
+	for (int i = 0; i < COMPUTE_UNIT_NUMBER; ++i) {
+		cout << "-------------------------------" << endl;
+		double ee_pos_temp[3];
+		ulong ee_pose_sel[6];
+		memcpy(ee_pose_sel, i * 6 + output_ee_pose, sizeof(ulong) * 6);
+		// revertPose(output_ee_pose, ee_pos);
+		revertPose(ee_pose_sel, ee_pos_temp);
+
+		cout << "Result from KM kernel execution" << endl;
+		for (int j = 0; j < 3; ++j) {
+			cout << ee_pos_temp[j] << " ";
+		}
+		cout << endl;
+
+	}
+	#endif
+
+	#ifdef ENABLE_FPKM
 	runFPKM();
 
-	revertPose(output_ee_pose, ee_pos);
-
-	cout << "Result from KM kernel execution" << endl;
-	for (int i = 0; i < 3; ++i) {
-		cout << ee_pos[i] << " ";
-	}
-	cout << endl;
-
 	cout << "-------------------------------" << endl;
-
 	cout << "Result from FPKM kernel execution" << endl;
-	for (int i = 0; i < 3; ++i) {
-		cout << output_fp_ee_pose[i] << " ";
+	for (int j = 0; j < COMPUTE_UNIT_NUMBER_FP; ++j) {
+		int offset = j * 3;
+		for (int i = 0; i < 3; ++i) {
+			cout << output_fp_ee_pose[offset + i] << " ";
+		}
+		cout << endl;
 	}
-	cout << endl;
-
+	#endif
 
 
 	// set initial arm pose
